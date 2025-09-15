@@ -25,6 +25,10 @@ git checkout -b feature/123-add-login
 
 
 ## Git Commands
+#### stage and commit
+```bash
+git add .
+
 - `git status` — Check your current branch and see changes.
 - `git pull origin main` — Pull the latest changes from the main branch - to ensure your copy is up to date.
 - `git checkout` -b your-branch-name — Create and switch to a new branch.
