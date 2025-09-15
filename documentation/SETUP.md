@@ -1,4 +1,11 @@
-## Project Setup 
+## Project Setup
+
+#### Step 1: clone repo
+```bash
+git clone https://github.com/YOUR_USERNAME/rights2roof.git
+cd rights2roof
+```
+
 #### Step 2: install dependencies (this auto-uses uv.lock versions)
 ```bash
 uv sync
@@ -14,6 +21,7 @@ uv run uvicorn app.services.slack_webhook:app --reload
 ```bash
 git checkout -b feature/123-add-login
 ```
+
 
 
 ## Git Commands
