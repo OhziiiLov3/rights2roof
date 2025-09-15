@@ -18,7 +18,18 @@ uv sync
 uv run uvicorn app.services.slack_webhook:app --reload
 ```
 
+### Step 4: create feature branch
+```bash
+git checkout -b feature/123-add-login
+```
+
+
 ## Git Commands
+#### stage and commit
+```bash
+git add .
+git commit -m "feat(auth): add login endpoint"
+```
 `git status` — Check your current branch and see changes.
 `git pull origin main` — Pull the latest changes from the main branch to ensure your copy is up to date.
 `git checkout` -b your-branch-name — Create and switch to a new branch.
