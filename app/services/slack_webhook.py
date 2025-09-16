@@ -16,7 +16,7 @@ async def post_slack_thread(channel_id: str, user_id: str, query_text: str):
     try:
         logging.info(f"[Right2Roof Bot] simulating pipeline for {user_id}:{query_text}")
 
-#  # ****Run MCP pipeline goes here***
+    # ==== @Peter- the MCP Client that connects the server will go below here(remove the simulation ) ==== 
 
         # simulate final answer
         final_answer = f"Simulated housing info for query: '{query_text}' "
@@ -25,6 +25,7 @@ async def post_slack_thread(channel_id: str, user_id: str, query_text: str):
 
         logging.info(f"[Right2Roof Bot] Finished simulated response for {user_id}")
         print(f"[Thread] Channel: {channel_id} | User: {user_id} | Answer: {final_answer}")
+        
     except Exception as e:
         logging.exception(f"[HousingBot] Error in simulated pipeline")
 
