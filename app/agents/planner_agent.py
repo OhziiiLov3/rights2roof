@@ -1,11 +1,11 @@
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_openai import ChatOpenAI
-
 from app.models.schemas import ExecutionPlan
-
+from app.tools import geo_tools
 import os
 from dotenv import load_dotenv
+
 
 load_dotenv()
 OPENAI_API_KEY=os.getenv("OPENAI_API_KEY")
@@ -18,9 +18,25 @@ planner_llm = ChatOpenAI(model="gpt-4o-mini", temperature=0, openai_api_key=OPEN
 plan_parser = PydanticOutputParser(pydantic_object=ExecutionPlan)
 
 
+# Step 6: add tools, availablie tools listed in the prompt for reference (will add wikipedia or whatever tool to make this step better)
+AVAILABLE_TOOLS = [geo_tools.geo_tool]
+
+tool_descriptions = [
+    f"- {t.name}: {t.description}" for t in AVAILABLE_TOOLS
+]
+
+
 # Step 3: Create system message(later will specific the tools)
 system_message = f"""
 You are a research planner. Break the user's query into a list of ordered steps.
+
+You have access to the following tools:
+
+{chr(10).join(tool_descriptions)}
+
+Important guidelines:
+- Use `geo_lookup` when you need location-specific information.
+
 Important guidelines:
 - Keep concise
 - Always return steps as JSON following these format instructions:
@@ -46,8 +62,27 @@ def planner_agent(query: str):
 
 
 # Test
+# Test/debugging
+if __name__ == "__main__":
+    test_query = "Help me create a plan to look for housing in my area"
+    
+    # Run planner agent
+    plan_result = planner_agent(test_query)
+    print("Planner Agent Output:")
+    print(plan_result)
+
+    # Optional: Test tools with verbose
+    print("\nTesting geo tool:")
+    geo_output = geo_tools.geo_tool.invoke({"ip": None}, verbose=True)
+    print(geo_output)
+
+
+
+
 # print(planner_agent("Help me create a plan to move into a new apartment"))
-raw_output = (planner_prompt.partial(format_instructions=plan_parser.get_format_instructions()) | planner_llm).invoke(
-    {"query": "What are the key differences between photosynthesis and cellular respiration?"}
-)# # Prints json object a list of a "plan"
-print(raw_output.content)
+# raw_output = (planner_prompt.partial(format_instructions=plan_parser.get_format_instructions()) | planner_llm).invoke(
+#     {"query": "What are the key differences between photosynthesis and cellular respiration?"}
+# )
+
+# Prints json object a list of a "plan"
+# print(raw_output.content)
