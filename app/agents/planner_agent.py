@@ -2,7 +2,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_openai import ChatOpenAI
 from app.models.schemas import ExecutionPlan
-from app.tools import geo_tools, wikipedia_tools, tavily_tools
+from app.tools import geo_tools, wikipedia_tools, tavily_tools, time_tools
 import os
 from dotenv import load_dotenv
 import logging
@@ -28,7 +28,7 @@ plan_parser = PydanticOutputParser(pydantic_object=ExecutionPlan)
 
 
 # Step 6: add tools, availablie tools listed in the prompt for reference (will add wikipedia or whatever tool to make this step better)
-AVAILABLE_TOOLS = [geo_tools.geo_tool, wikipedia_tools.wikipedia_tool, tavily_tools.tavily_tool ]
+AVAILABLE_TOOLS = [geo_tools.geo_tool, wikipedia_tools.wikipedia_tool, tavily_tools.tavily_tool, time_tools.time_tool ]
 
 tool_descriptions = [f"- {t.name}: {t.description}" for t in AVAILABLE_TOOLS]
 

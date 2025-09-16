@@ -34,6 +34,3 @@ tavily_tool = StructuredTool.from_function(
 )
 
 
-if __name__ == "__main__":
-    output = tavily_search("NYC rental assistance September 2025")
-    print(output.model_dump_json(indent=2))
