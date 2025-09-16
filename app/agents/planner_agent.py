@@ -2,7 +2,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_openai import ChatOpenAI
 from app.models.schemas import ExecutionPlan
-from app.tools import geo_tools
+from app.tools import geo_tools, wikipedia_tools
 import os
 from dotenv import load_dotenv
 import logging
@@ -28,7 +28,7 @@ plan_parser = PydanticOutputParser(pydantic_object=ExecutionPlan)
 
 
 # Step 6: add tools, availablie tools listed in the prompt for reference (will add wikipedia or whatever tool to make this step better)
-AVAILABLE_TOOLS = [geo_tools.geo_tool]
+AVAILABLE_TOOLS = [geo_tools.geo_tool, wikipedia_tools.wikipedia_tool ]
 
 tool_descriptions = [f"- {t.name}: {t.description}" for t in AVAILABLE_TOOLS]
 
@@ -42,9 +42,11 @@ You have access to the following tools:
 {chr(10).join(tool_descriptions)}
 
 Important guidelines:
-- Use `geo_lookup` when you need location-specific information.
+- Use `geo_location` when you need location-specific information.
+- Use `wikipedia_search` when you need general topic information.
 
 Important guidelines:
+- For each step, include an the configured "tool" field (geo_lookup, wikipedia_search, etc.)
 - Keep concise
 - Always return steps as JSON following these format instructions:
 {{format_instructions}}
@@ -75,28 +77,38 @@ def planner_agent(query: str):
 
 
 # Test
-# Test/debugging
-
-
-# Test
 if __name__ == "__main__":
     test_query = "Help me create a plan to look for housing in my area"
-    
-    plan_result = planner_agent(test_query)
-    print("Planner Agent Output:")
-    print(plan_result)
 
-    # Optional: Test geo tool with logging
+    # Test Planner Agent
+    try:
+        plan_result = planner_agent(test_query)
+        print("Planner Agent Output:")
+        print(plan_result)
+    except Exception as e:
+        logging.error(f"Planner agent error: {e}", exc_info=True)
+
+    # Test Geo Tool
     try:
         logging.info("Testing geo tool...")
         geo_output = geo_tools.geo_tool.invoke({"ip": None}, verbose=True)
+        print("Geo Tool Output:")
         print(geo_output)
     except Exception as e:
         logging.error(f"Geo tool error: {e}", exc_info=True)
 
+    # Test Wikipedia Tool
+    try:
+        logging.info("Testing Wikipedia tool...")
+        wiki_output = wikipedia_tools.wikipedia_tool.invoke({"query": "Help me find rental assistance programs"}, verbose=True)
+        print("Wikipedia Tool Output:")
+        print(wiki_output)
+    except Exception as e:
+        logging.error(f"Wikipedia tool error: {e}", exc_info=True)
 
 
 
+# simple test
 
 # print(planner_agent("Help me create a plan to move into a new apartment"))
 # raw_output = (planner_prompt.partial(format_instructions=plan_parser.get_format_instructions()) | planner_llm).invoke(
