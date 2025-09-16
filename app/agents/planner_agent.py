@@ -76,70 +76,7 @@ def planner_agent(query: str):
 
 # Test
 # Test/debugging
-import logging
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import PydanticOutputParser
-from langchain_openai import ChatOpenAI
-from app.models.schemas import ExecutionPlan
-from app.tools import geo_tools
-import os
-from dotenv import load_dotenv
 
-load_dotenv()
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-
-# Setup basic logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[logging.StreamHandler()]
-)
-
-# Step 1: Define Model for planner agent
-planner_llm = ChatOpenAI(model="gpt-4o-mini", temperature=0, openai_api_key=OPENAI_API_KEY)
-
-# Step 2: Load Output Parser
-plan_parser = PydanticOutputParser(pydantic_object=ExecutionPlan)
-
-# Step 3: Add tools
-AVAILABLE_TOOLS = [geo_tools.geo_tool]
-tool_descriptions = [f"- {t.name}: {t.description}" for t in AVAILABLE_TOOLS]
-
-# Step 4: System message
-system_message = f"""
-You are a research planner. Break the user's query into a list of ordered steps.
-
-You have access to the following tools:
-
-{chr(10).join(tool_descriptions)}
-
-Important guidelines:
-- Use `geo_lookup` when you need location-specific information.
-- Keep concise
-- Always return steps as JSON following these format instructions:
-{{format_instructions}}
-- Do not include any text outside of the JSON.
-"""
-
-# Step 5: Create prompt
-planner_prompt = ChatPromptTemplate.from_messages([
-   ("system", system_message),
-   ("human", "{query}")
-])
-
-# Step 6: Set up Planner Chain
-planner_chain = planner_prompt.partial(format_instructions=plan_parser.get_format_instructions()) | planner_llm | plan_parser
-
-# Step 7: Planner Agent with error logging
-def planner_agent(query: str):
-    try:
-        logging.info(f"Planner Agent invoked with query: {query}")
-        result = planner_chain.invoke({"query": query})
-        logging.info("Planner Agent successfully generated plan.")
-        return result
-    except Exception as e:
-        logging.error(f"Error in planner_agent: {e}", exc_info=True)
-        return {"error": str(e)}
 
 # Test
 if __name__ == "__main__":
