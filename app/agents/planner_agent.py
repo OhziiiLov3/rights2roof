@@ -30,17 +30,24 @@ Important guidelines:
  """
 
 # Step 4: create system and human prompt
-planner_propmt= ChatPromptTemplate.from_messages([
+planner_prompt= ChatPromptTemplate.from_messages([
    ("system", system_message),
    ("human", "{query}")
 ])
 
 # Step 5: Set up Planner Chain
-planner_chain = planner_propmt.partial(format_instructions=plan_parser.get_format_instructions()) | planner_llm | plan_parser
+planner_chain = planner_prompt.partial(format_instructions=plan_parser.get_format_instructions()) | planner_llm | plan_parser
 
 # Step 6: Create Planner Agent 
 def planner_agent(query: str):
     result = planner_chain.invoke({"query": query})
     return result
 
-print(planner_agent("Help me create a plan to move into a new apartment"))
+
+
+# Test
+# print(planner_agent("Help me create a plan to move into a new apartment"))
+raw_output = (planner_prompt.partial(format_instructions=plan_parser.get_format_instructions()) | planner_llm).invoke(
+    {"query": "What are the key differences between photosynthesis and cellular respiration?"}
+)# # Prints json object a list of a "plan"
+print(raw_output.content)
