@@ -3,21 +3,17 @@ from langchain_core.output_parsers import PydanticOutputParser
 from langchain_openai import ChatOpenAI
 from app.models.schemas import ExecutionPlan
 from app.tools import geo_tools, wikipedia_tools, tavily_tools, time_tools
+from langsmith import traceable
 import os
 from dotenv import load_dotenv
-import logging
+
 
 
 
 load_dotenv()
 OPENAI_API_KEY=os.getenv("OPENAI_API_KEY")
 
-# Setup basic logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[logging.StreamHandler()]
-)
+
 
 
 #Step 1: Define Model for planner agent
@@ -67,12 +63,10 @@ planner_chain = planner_prompt.partial(format_instructions=plan_parser.get_forma
 # Step 6: Create Planner Agent with Error Loggins 
 def planner_agent(query: str):
     try:
-        logging.info(f"Planner Agent invoked with query: {query}")
         result = planner_chain.invoke({"query": query})
-        logging.info("Planner Agent successfully generated plan.")
         return result
     except Exception as e:
-        logging.error(f"Error in planner_agent: {e}", exc_info=True)
-    return result
+        return {"error": str(e)}
+
 
 
