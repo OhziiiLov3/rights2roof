@@ -4,6 +4,7 @@ from langchain_openai import ChatOpenAI
 from app.models.schemas import ExecutionPlan
 from app.tools import geo_tools, wikipedia_tools, tavily_tools, time_tools
 from langsmith import traceable
+
 import os
 from dotenv import load_dotenv
 
@@ -15,9 +16,8 @@ OPENAI_API_KEY=os.getenv("OPENAI_API_KEY")
 
 
 
-
 #Step 1: Define Model for planner agent
-planner_llm = ChatOpenAI(model="gpt-4o-mini", temperature=0, openai_api_key=OPENAI_API_KEY)
+planner_llm = ChatOpenAI(model="gpt-4o-mini", temperature=0, openai_api_key=OPENAI_API_KEY, verbose=True)
 
 #Step 2: Load Output Parser - This parses the llm's text into structure JSON and validatas the data
 plan_parser = PydanticOutputParser(pydantic_object=ExecutionPlan)
@@ -60,7 +60,11 @@ planner_prompt= ChatPromptTemplate.from_messages([
 # Step 5: Set up Planner Chain
 planner_chain = planner_prompt.partial(format_instructions=plan_parser.get_format_instructions()) | planner_llm | plan_parser
 
+
+
+
 # Step 6: Create Planner Agent with Error Loggins 
+@traceable
 def planner_agent(query: str):
     try:
         result = planner_chain.invoke({"query": query})
