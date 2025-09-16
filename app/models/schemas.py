@@ -1,1 +1,12 @@
 # Pydantic Schemas go here
+from pydantic import BaseModel, Field
+from typing import List, Any, Optional
+
+
+# Defines schema for the Plan
+
+class ExecutionPlan(BaseModel):
+    plan: List[str] = Field(
+        description="A list of steps to execute in order to answer a propmpt"
+    )
+
