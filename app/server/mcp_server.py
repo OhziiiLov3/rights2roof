@@ -15,8 +15,6 @@ def fetch_location_from_ip(ip:Optional[str] = None) -> Dict[str, Any]:
     return{"result": get_location_from_ip(ip) }
 
 
-
-
 @rights2roof_server.tool(description="Search Wikipedia for information")
 def wikipedia_lookup(query: str) -> Dict[str, Any]:
     return {"result": wikipedia_search(query)}
