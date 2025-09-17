@@ -28,7 +28,7 @@ async def post_slack_thread(channel_id: str, user_id: str, query_text: str):
 
     # ==== @Peter- the MCP Client that connects the server will go below here(remove the simulation ) ==== 
 
-        # Call Planner Agent instead of simulating 
+        # Call Planner Agent DEMO without MCP Client
         plan_result = planner_agent(query_text)
 
          # Runs planner agent - just to demo for now - this will change 
@@ -58,6 +58,8 @@ async def post_slack_thread(channel_id: str, user_id: str, query_text: str):
             # thread_ts=thread_ts,
             text=final_answer
         )
+
+
 
         logging.info(f"[Right2Roof Bot] Finished simulated response for {user_id}")
         print(f"[Thread] Channel: {channel_id} | User: {user_id} | Answer: {final_answer}")
