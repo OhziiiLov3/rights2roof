@@ -3,10 +3,20 @@ from fastapi import FastAPI, Form
 import asyncio
 import os
 import logging
+from slack_sdk import WebClient
+from app.agents.planner_agent import planner_agent
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = FastAPI(title="Rights-2-Roof Slash Command")
-
 logging.basicConfig(level=logging.INFO)
+
+# intialize Slack Client 
+SLACK_BOT_TOKEN=os.getenv("SLACK_BOT_TOKEN")
+client = WebClient(token=SLACK_BOT_TOKEN)
+
+
 
 # Helper Function: Post Threaded response
 async def post_slack_thread(channel_id: str, user_id: str, query_text: str):
@@ -18,10 +28,34 @@ async def post_slack_thread(channel_id: str, user_id: str, query_text: str):
 
     # ==== @Peter- the MCP Client that connects the server will go below here(remove the simulation ) ==== 
 
-        # simulate final answer
-        final_answer = f"Simulated housing info for query: '{query_text}' "
-        # simulate async posting delay
-        await asyncio.sleep(1)
+        # Call Planner Agent instead of simulating 
+        plan_result = planner_agent(query_text)
+
+         # Runs planner agent - just to demo for now - this will change 
+        if hasattr(plan_result, "model_dump"):
+            plan_steps = plan_result.model_dump().get("plan", [])
+        else:
+            plan_steps = plan_result.get("plan", [])
+
+        final_answer = "\n".join(f"{i+1}. {step}" for i, step in enumerate(plan_steps))
+
+
+        # Post a placeholder message first(this creates the thread)
+        placeholder = await asyncio.to_thread(
+            client.chat_postMessage,
+            channel=channel_id,
+            text=f"<@{user_id}> Fetching information about your plan..."
+        )
+
+        thread_ts = placeholder["ts"]
+
+        # Post final answer in the thread
+        await asyncio.to_thread(
+            client.chat_postMessage,
+            channel=channel_id,
+            thread_ts=thread_ts,
+            text=final_answer
+        )
 
         logging.info(f"[Right2Roof Bot] Finished simulated response for {user_id}")
         print(f"[Thread] Channel: {channel_id} | User: {user_id} | Answer: {final_answer}")
@@ -30,7 +64,7 @@ async def post_slack_thread(channel_id: str, user_id: str, query_text: str):
         logging.exception(f"[HousingBot] Error in simulated pipeline")
 
 
-# Slack Slash Command  Endpoint
+# Slack Slash Command Endpoint
 @app.post("/slack/rights-2-roof")
 async def slack_roof(text: str = Form(...),user_id: str = Form(...),channel_id: str = Form(...),):
     """
