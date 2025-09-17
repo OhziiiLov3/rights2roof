@@ -21,7 +21,7 @@ client = WebClient(token=SLACK_BOT_TOKEN)
 # Helper Function: Post Threaded response
 async def post_slack_thread(channel_id: str, user_id: str, query_text: str):
     """
-    For now, just simulates MCP response for testing.
+    Runs the Planner agent and sends the final answer as a private DM to the user.
     """
     try:
         logging.info(f"[Right2Roof Bot] simulating pipeline for {user_id}:{query_text}")
@@ -41,20 +41,20 @@ async def post_slack_thread(channel_id: str, user_id: str, query_text: str):
 
 
         # Post a placeholder message first(this creates the thread)
-        placeholder = await asyncio.to_thread(
-            client.chat_postMessage,
-            channel=channel_id,
-            text=f"<@{user_id}> Fetching information about your plan..."
-        )
-        
+        # placeholder = await asyncio.to_thread(
+        #     client.chat_postMessage,
+        #     channel=channel_id,
+        #     text=f"<@{user_id}> Fetching information about your plan..."
+        # )
         # creates placeholder for message to respond in the thread 
         # thread_ts = placeholder["ts"]
+
+
 
         # Post final answer in the thread
         await asyncio.to_thread(
             client.chat_postMessage,
             channel=user_id,
-            # post reponse to thread
             # thread_ts=thread_ts,
             text=final_answer
         )
