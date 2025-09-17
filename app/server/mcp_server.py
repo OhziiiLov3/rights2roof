@@ -44,9 +44,9 @@ def planner_agent_tool(query: str) -> Dict[str, Any]:
     if hasattr(plan_result, "model_dump"):
         plan_steps = plan_result.model_dump().get("plan", [])
     else:
-        plan_steps = plan_result.get("plan", [])
+        return{"result": plan_steps}
 
-    return{"result": plan_result}
+    
 
 
 def ping() -> str:
