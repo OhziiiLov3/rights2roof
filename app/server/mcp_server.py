@@ -5,6 +5,8 @@ import requests
 import os    
 from app.tools.wikipedia_tools import wikipedia_search
 from app.tools.geo_tools import get_location_from_ip
+from app.tools.tavily_tools import tavily_search
+from app.tools.time_tools import time_tool_fn
 rights2roof_server = FastMCP("rights2roof_tools")
 
 
@@ -20,7 +22,13 @@ def wikipedia_lookup(query: str) -> Dict[str, Any]:
     return {"result": wikipedia_search(query)}
 
 
+@rights2roof_server.tool(description="Return the current date and time in ISO format.")
+def time()-> Dict[str, Any]:
+    return{"result": time_tool_fn()}
 
+@rights2roof_server.tool(description="Search Tavily for recent/local housing info and return structured output.")
+def tavily(query: str)-> Dict[str, Any]:
+    return{"result": tavily_search}
 
 def ping() -> str:
     return "pong"
