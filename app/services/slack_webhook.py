@@ -46,14 +46,16 @@ async def post_slack_thread(channel_id: str, user_id: str, query_text: str):
             channel=channel_id,
             text=f"<@{user_id}> Fetching information about your plan..."
         )
-
-        thread_ts = placeholder["ts"]
+        
+        # creates placeholder for message to respond in the thread 
+        # thread_ts = placeholder["ts"]
 
         # Post final answer in the thread
         await asyncio.to_thread(
             client.chat_postMessage,
-            channel=channel_id,
-            thread_ts=thread_ts,
+            channel=user_id,
+            # post reponse to thread
+            # thread_ts=thread_ts,
             text=final_answer
         )
 
