@@ -7,14 +7,17 @@ requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.116.1",
     "fastmcp>=2.12.3",
-    "langchain>=0.3.27",
+    "langchain[openai]>=0.3.27",
     "langchain-community>=0.3.29",
     "langchain-openai>=0.3.33",
     "langchain-tavily>=0.2.11",
+    "langgraph>=0.6.7",
     "pydantic>=2.11.8",
     "python-dotenv>=1.1.1",
     "requests>=2.32.5",
     "slack-sdk>=3.36.0",
     "uvicorn>=0.35.0",
     "wikipedia>=1.4.0",
+    "langsmith>=0.4.28",
+    "python-multipart>=0.0.20",
 ]
