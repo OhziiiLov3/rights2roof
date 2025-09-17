@@ -1,6 +1,8 @@
 # slack webhook
 from fastapi import FastAPI, Form
+from fastmcp import Client
 import asyncio
+from langsmith import traceable
 import os
 import logging
 from slack_sdk import WebClient
@@ -10,15 +12,18 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = FastAPI(title="Rights-2-Roof Slash Command")
-logging.basicConfig(level=logging.INFO)
+
 
 # intialize Slack Client 
 SLACK_BOT_TOKEN=os.getenv("SLACK_BOT_TOKEN")
 client = WebClient(token=SLACK_BOT_TOKEN)
 
 
+MCP_SERVER_URL = "http://127.0.0.1:5200/mcp"
+
 
 # Helper Function: Post Threaded response
+@traceable
 async def post_slack_thread(channel_id: str, user_id: str, query_text: str):
     """
     Runs the Planner agent and sends the final answer as a private DM to the user.
@@ -26,16 +31,26 @@ async def post_slack_thread(channel_id: str, user_id: str, query_text: str):
     try:
         logging.info(f"[Right2Roof Bot] simulating pipeline for {user_id}:{query_text}")
 
-    # ==== @Peter- the MCP Client that connects the server will go below here(remove the simulation ) ==== 
+        async with Client(MCP_SERVER_URL) as mcp_client:
+            await mcp_client.ping()
 
-        # Call Planner Agent DEMO without MCP Client
-        plan_result = planner_agent(query_text)
-
-         # Runs planner agent - just to demo for now - this will change 
-        if hasattr(plan_result, "model_dump"):
-            plan_steps = plan_result.model_dump().get("plan", [])
+            # call the planner tool(we will swap with agent pipline later)
+            result = await mcp_client.call_tool(
+                "planner_agent_tool",
+                {"query": query_text}
+            )
+            
+        # extract the plan from the result
+        if result.is_error:
+            plan_steps = ["Error fetching plan"]
         else:
-            plan_steps = plan_result.get("plan", [])
+    # handle Pydantic CallToolResult properly
+            plan_steps = []
+            for c in result.content:
+                if hasattr(c, "text") and c.text:
+                    plan_steps.append(c.text)
+                elif hasattr(c, "data") and "result" in c.data:
+                    plan_steps.extend(c.data["result"])
 
         final_answer = "\n".join(f"{i+1}. {step}" for i, step in enumerate(plan_steps))
 
@@ -50,11 +65,11 @@ async def post_slack_thread(channel_id: str, user_id: str, query_text: str):
         # thread_ts = placeholder["ts"]
 
 
-
         # Post final answer in the thread
         await asyncio.to_thread(
             client.chat_postMessage,
-            channel=user_id,
+            channel=channel_id,
+            user=user_id,
             # thread_ts=thread_ts,
             text=final_answer
         )
