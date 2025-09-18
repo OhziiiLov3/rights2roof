@@ -34,7 +34,7 @@ def tavily(query: str)-> Dict[str, Any]:
 
 
 @rights2roof_server.tool(description="Run Planner agent to break query into steps")
-def planner_agent_tool(query: str) -> Dict[str, Any]:
+def planner_agent_tool(query: str) -> Dict[str,Any]:
 # simulate final answer
     plan_result = planner_agent(query)
         # Runs planner agent - just to demo for now - this will change 
@@ -42,7 +42,8 @@ def planner_agent_tool(query: str) -> Dict[str, Any]:
         plan_steps = plan_result.model_dump().get("plan", [])
     else:
         plan_steps = plan_result.get("plan", [])
-    return{"result": plan_steps}
+
+    return {"result":plan_steps}
 
 
 def ping() -> str:

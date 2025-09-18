@@ -39,38 +39,41 @@ async def post_slack_thread(channel_id: str, user_id: str, query_text: str):
                 "planner_agent_tool",
                 {"query": query_text}
             )
-            
-        # extract the plan from the result
-        if result.is_error:
-            plan_steps = ["Error fetching plan"]
-        else:
-    # handle Pydantic CallToolResult properly
+        
+            # handles Pydantic output
+           # handles Pydantic output
             plan_steps = []
-            for c in result.content:
-                if hasattr(c, "text") and c.text:
-                    plan_steps.append(c.text)
-                elif hasattr(c, "data") and "result" in c.data:
-                    plan_steps.extend(c.data["result"])
+            if not result.is_error:
+                for c in result.content:
+                    # MCP content may have 'data' with a list of steps
+                    if hasattr(c, "data") and isinstance(c.data, dict) and "result" in c.data:
+                        # c.data["result"] is a list of strings
+                        plan_steps.extend(c.data["result"])
+                    # fallback: if 'text' is present
+                    elif hasattr(c, "text") and c.text:
+                        plan_steps.append(c.text)
 
-        final_answer = "\n".join(f"{i+1}. {step}" for i, step in enumerate(plan_steps))
+            # Now plan_steps is a flat list of strings
+            final_answer = "\n".join(f"{i+1}. {step}" for i, step in enumerate(plan_steps))
+
+
 
 
         # Post a placeholder message first(this creates the thread)
-        # placeholder = await asyncio.to_thread(
-        #     client.chat_postMessage,
-        #     channel=channel_id,
-        #     text=f"<@{user_id}> Fetching information about your plan..."
-        # )
+        placeholder = await asyncio.to_thread(
+            client.chat_postMessage,
+            channel=channel_id,
+            text=f"<@{user_id}> Fetching information about your plan..."
+        )
         # creates placeholder for message to respond in the thread 
-        # thread_ts = placeholder["ts"]
+        thread_ts = placeholder["ts"]
 
 
         # Post final answer in the thread
         await asyncio.to_thread(
             client.chat_postMessage,
             channel=channel_id,
-            user=user_id,
-            # thread_ts=thread_ts,
+            thread_ts=thread_ts,
             text=final_answer
         )
 
