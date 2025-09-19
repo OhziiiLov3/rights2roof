@@ -63,7 +63,6 @@ planner_chain = planner_prompt.partial(format_instructions=plan_parser.get_forma
 
 
 
-
 # Step 6: Create Planner Agent with Error Loggins 
 @traceable
 def planner_agent(query: str):

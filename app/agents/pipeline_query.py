@@ -29,13 +29,10 @@ def pipeline_query(user_query:str)-> Dict[str,Any]:
 
 
     # Step 2: Rag Agent goes here 
-
-
     # Step 3: Executor goes here
 
 
     # right now just return plan_result 
     return {"plan": plan_steps}
 
-def ping() -> str:
-    return "Pipeline MCP is alive"
+
