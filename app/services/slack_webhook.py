@@ -41,19 +41,29 @@ async def post_slack_thread(channel_id: str, user_id: str, query_text: str):
             )
         
             # handles Pydantic output
-           # handles Pydantic output
             plan_steps = []
-            if not result.is_error:
-                for c in result.content:
-                    # MCP content may have 'data' with a list of steps
-                    if hasattr(c, "data") and isinstance(c.data, dict) and "result" in c.data:
-                        # c.data["result"] is a list of strings
-                        plan_steps.extend(c.data["result"])
-                    # fallback: if 'text' is present
-                    elif hasattr(c, "text") and c.text:
-                        plan_steps.append(c.text)
+            for item in result.content:
+                if hasattr(item, "data") and isinstance(item.data, list):
+                    plan_steps.extend(item.data)
+                elif hasattr(item, "text") and item.text:
+                    plan_steps.append(item.text)
+            
+            # # Check if the tool call returned an error
+            # if result.is_error:
+            #     plan_steps = ["Error fetching plan"]
+            # else:
+            #     # result.content is a list of items returned by the tool
+            #     for item in result.content:
+            #         # MCP wraps the tool's return value in `data`
+            #         if hasattr(item, "data") and isinstance(item.data, dict) and "result" in item.data:
+            #             # item.data["result"] is a list of strings
+            #             plan_steps.extend(item.data["result"])
+            #         # fallback: some tools may return a text attribute
+            #         elif hasattr(item, "text") and item.text:
+            #             plan_steps.append(item.text)
 
-            # Now plan_steps is a flat list of strings
+            
+
             final_answer = "\n".join(f"{i+1}. {step}" for i, step in enumerate(plan_steps))
 
 
@@ -65,6 +75,7 @@ async def post_slack_thread(channel_id: str, user_id: str, query_text: str):
             channel=channel_id,
             text=f"<@{user_id}> Fetching information about your plan..."
         )
+
         # creates placeholder for message to respond in the thread 
         thread_ts = placeholder["ts"]
 
@@ -83,7 +94,12 @@ async def post_slack_thread(channel_id: str, user_id: str, query_text: str):
         print(f"[Thread] Channel: {channel_id} | User: {user_id} | Answer: {final_answer}")
         
     except Exception as e:
-        logging.exception(f"[HousingBot] Error in simulated pipeline")
+        logging.exception(f"[Right2RoofBot] Error in planner agent")
+        await asyncio.to_thread(
+            client.chat_postMessage,
+            channel=channel_id,
+            text=f"<@{user_id}> Error fetching housing info: {str(e)}"
+        )
 
 
 # Slack Slash Command Endpoint
