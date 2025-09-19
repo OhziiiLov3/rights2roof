@@ -34,13 +34,9 @@ ALLOWED_PATTERNS = [
 def sanitize_query(query:str)-> str:
     """
     Clean up and validate user input before sending it to agents.
-    - Removes Slack mentions, markdown, or weird formatting
-    - Ensures query is relevant to housing/tenant topics
-    - Prevents unsafe or malicious text from propagating
     """
     # strip slack mentions like <@U12345>
     cleaned = re.sub(r"<@[\w\d]+>", "", query)
-
     # Remove Slack markdown chars(*,_,``) and removes whitespace
     cleaned = re.sub(r"[*_`]","",cleaned).strip()
 
@@ -57,7 +53,6 @@ async def post_slack_thread(client: WebClient,channel_id: str, user_id: str, que
     """
     try:
         logging.info(f"[Right2Roof Bot] simulating pipeline for {user_id}:{query_text}")
-
         # async with Client(MCP_SERVER_URL) as mcp_client:
         #     await mcp_client.ping()
 
@@ -67,10 +62,11 @@ async def post_slack_thread(client: WebClient,channel_id: str, user_id: str, que
         #         {"query": query_text}
         #     )
 
-        # runs pipeline query locally for now 
+        # TEMPORARY :runs pipeline query locally for now 
         result = pipeline_query(query_text)
+        logging.info(f"Pipeline result: {result.get('plan')}")
 
-     # Ensure we have a list of steps
+        # plan is key coming from pydantic model 
         plan_steps = result.get("plan", [])
         final_answer = "\n".join(f"{i+1}. {step}" for i, step in enumerate(plan_steps))
 

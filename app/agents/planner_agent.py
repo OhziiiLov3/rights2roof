@@ -39,6 +39,7 @@ You have access to the following tools:
 
 Guidelines for tool usage:
 - Use `geo_location` when you need location-specific information.
+- Use `time_tool` when you need time-sensitive information.
 - Use `wikipedia_search` when you need general topic information.
 - Use `search_tool` (Tavily) when you need relevant, up-to-date information and citations.
 
