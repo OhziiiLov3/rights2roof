@@ -14,7 +14,7 @@ load_dotenv()
 
 MCP_SERVER_URL = "http://127.0.0.1:5200/mcp"
 
-# In-memory rate limit store
+# TEMPORARY -> (will can add this to redis to handles logs and persisit)
 user_request_log = {}
 
 # Rate limit config
