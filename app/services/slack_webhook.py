@@ -4,7 +4,7 @@ import asyncio
 import os
 from dotenv import load_dotenv
 from slack_sdk import WebClient
-from app.services.slack_helpers import sanitize_query, post_slack_thread
+from app.services.slack_helpers import sanitize_query, post_slack_thread , check_rate_limit
 load_dotenv()
 
 
@@ -26,6 +26,12 @@ async def slack_roof(text: str = Form(...),user_id: str = Form(...),channel_id: 
     Handles /rights-2-roof <query> slash command from Slack.
     Responds immediately, then posts final answer asynchronously.
     """
+    # rate limiting 
+    if not check_rate_limit(user_id):
+        return {
+            "response_type": "ephemeral",
+            "text": f"Rate limit exceeded. You can only make 10 requests per hour."
+        }
     try:
         # Step 1: Sanitize
         safe_text = sanitize_query(text)
