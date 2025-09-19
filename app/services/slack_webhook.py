@@ -6,8 +6,10 @@ from langsmith import traceable
 import os
 import logging
 from slack_sdk import WebClient
-from app.agents.planner_agent import planner_agent
+from app.agents.pipeline_query import pipeline_query
 from dotenv import load_dotenv
+import re
+
 
 load_dotenv()
 
@@ -21,6 +23,40 @@ client = WebClient(token=SLACK_BOT_TOKEN)
 
 MCP_SERVER_URL = "http://127.0.0.1:5200/mcp"
 
+# Allowed Topics for user query santitation
+# first pass to test topics
+# ALLOWED_TOPICS = ["rent", "housing","moving","eviction","tenant","lease","landlord","assistance", "housing repairs"]
+ALLOWED_PATTERNS = [
+    r"\brent(ing|al)?\b",            # rent, rental, renting
+    r"\bhousing\b",                  # housing
+    r"\beviction(s)?\b",             # eviction, evictions
+    r"\btenant(s)?\b",               # tenant, tenants
+    r"\blease(s)?\b",                # lease, leases
+    r"\blandlord(s)?\b",             # landlord, landlords
+    r"\bassistance\b",               # assistance
+    r"\bshelter(s)?\b",              # shelter, shelters
+    r"\bapartment(s)?\b",            # apartment, apartments
+    r"\bflat(s)?\b",                 # flat, flats (UK term)
+]
+
+# Helper Function: Clean up and validate user input before sending it to agents.
+def sanitize_query(query:str)-> str:
+    """
+    Clean up and validate user input before sending it to agents.
+    - Removes Slack mentions, markdown, or weird formatting
+    - Ensures query is relevant to housing/tenant topics
+    - Prevents unsafe or malicious text from propagating
+    """
+    # strip slack mentions like <@U12345>
+    cleaned = re.sub(r"<@[\w\d]+>", "", query)
+
+    # Remove Slack markdown chars(*,_,``) and removes whitespace
+    cleaned = re.sub(r"[*_`]","",cleaned).strip()
+
+    # check for topic relavance
+    if not any(re.search(pattern, cleaned.lower()) for pattern in ALLOWED_PATTERNS):
+        raise ValueError("Query not related to housing/tenant issues.")
+    return cleaned
 
 # Helper Function: Post Threaded response
 @traceable
@@ -31,42 +67,21 @@ async def post_slack_thread(channel_id: str, user_id: str, query_text: str):
     try:
         logging.info(f"[Right2Roof Bot] simulating pipeline for {user_id}:{query_text}")
 
-        async with Client(MCP_SERVER_URL) as mcp_client:
-            await mcp_client.ping()
+        # async with Client(MCP_SERVER_URL) as mcp_client:
+        #     await mcp_client.ping()
 
-            # call the planner tool(we will swap with agent pipline later)
-            result = await mcp_client.call_tool(
-                "planner_agent_tool",
-                {"query": query_text}
-            )
-        
-            # handles Pydantic output
-            plan_steps = []
-            for item in result.content:
-                if hasattr(item, "data") and isinstance(item.data, list):
-                    plan_steps.extend(item.data)
-                elif hasattr(item, "text") and item.text:
-                    plan_steps.append(item.text)
-            
-            # # Check if the tool call returned an error
-            # if result.is_error:
-            #     plan_steps = ["Error fetching plan"]
-            # else:
-            #     # result.content is a list of items returned by the tool
-            #     for item in result.content:
-            #         # MCP wraps the tool's return value in `data`
-            #         if hasattr(item, "data") and isinstance(item.data, dict) and "result" in item.data:
-            #             # item.data["result"] is a list of strings
-            #             plan_steps.extend(item.data["result"])
-            #         # fallback: some tools may return a text attribute
-            #         elif hasattr(item, "text") and item.text:
-            #             plan_steps.append(item.text)
+        #     # call the planner tool(we will swap with agent pipline later)
+        #     result = await mcp_client.call_tool(
+        #         "planner_agent_tool",
+        #         {"query": query_text}
+        #     )
 
-            
+        # runs pipeline query locally for now 
+        result = pipeline_query(query_text)
 
-            final_answer = "\n".join(f"{i+1}. {step}" for i, step in enumerate(plan_steps))
-
-
+     # Ensure we have a list of steps
+        plan_steps = result.get("plan", [])
+        final_answer = "\n".join(f"{i+1}. {step}" for i, step in enumerate(plan_steps))
 
 
         # Post a placeholder message first(this creates the thread)
@@ -109,17 +124,25 @@ async def slack_roof(text: str = Form(...),user_id: str = Form(...),channel_id: 
     Handles /rights-2-roof <query> slash command from Slack.
     Responds immediately, then posts final answer asynchronously.
     """
+    try:
+        # Step 1: Sanitize
+        safe_text = sanitize_query(text)
 
-    # step 1: Slack to respond immediately 
-    ephemeral_response = {
-        "response_type": "ephemeral",
-        "text": f"Got it! Running Rights2Roof search for: {text}"
-    }
+        # step 2: Slack to respond immediately 
+        ephemeral_response = {
+            "response_type": "ephemeral",
+            "text": f"Got it! Running Rights2Roof search for: {safe_text}"
+        }
 
-    # step 2: Trigger background task for final answer
-    asyncio.create_task(post_slack_thread(channel_id,user_id, text))
+        # step 3: Trigger background task for final answer
+        asyncio.create_task(post_slack_thread(channel_id,user_id, safe_text))
 
-    return ephemeral_response
+        return ephemeral_response
+    except ValueError as error:
+        return{
+            "response_type": "ephemeral",
+            "text": f"Sorry, your query isn't related to housing/tenant issues:{str(error)}"
+        }
 
 
 @app.get("/")
