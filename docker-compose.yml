@@ -1,0 +1,19 @@
+version: "3.9"
+services:
+  fastapi:
+    build: .
+    command: uv run python server/slack_webhook.py
+    ports:
+      - "5200:5200"
+    volumes:
+      - .:/app   
+  mcp:
+    build: .
+    command: uv run python server/mcp_server.py
+    ports:
+      - "5300:5300"
+    volumes:
+      - .:/app   # optional: same as above
+
+
+#.:/app is so if we change files in any of these services we dont have to recompose the docker container
