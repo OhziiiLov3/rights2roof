@@ -1,5 +1,5 @@
 import time
-from app.services.slack_helpers import check_rate_limit
+from app.services.redis_helpers import check_rate_limit
 
 
 if __name__ == "__main__":

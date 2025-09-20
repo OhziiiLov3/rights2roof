@@ -4,7 +4,8 @@ import asyncio
 import os
 from dotenv import load_dotenv
 from slack_sdk import WebClient
-from app.services.slack_helpers import sanitize_query, post_slack_thread , check_rate_limit
+from app.services.slack_helpers import sanitize_query, post_slack_thread 
+from app.services.redis_helpers import check_rate_limit
 load_dotenv()
 
 
