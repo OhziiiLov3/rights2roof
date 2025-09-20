@@ -3,6 +3,9 @@ from fastapi import FastAPI, Form
 import asyncio
 import os
 import logging
+from app.server.mcp_server import rights2roof_server
+from fastmcp import Client
+
 
 app = FastAPI(title="Rights-2-Roof Slash Command")
 
@@ -16,7 +19,9 @@ async def post_slack_thread(channel_id: str, user_id: str, query_text: str):
     try:
         logging.info(f"[Right2Roof Bot] simulating pipeline for {user_id}:{query_text}")
 
+
     # ==== @Peter- the MCP Client that connects the server will go below here(remove the simulation ) ==== 
+        rights2roof_client = Client(rights2roof_server)
 
         # simulate final answer
         final_answer = f"Simulated housing info for query: '{query_text}' "
