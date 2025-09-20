@@ -13,8 +13,6 @@ rights2roof_server = FastMCP( "rights2roof_tools")
 
 
 
-
-
 @rights2roof_server.tool(description="geolocation tool to find the users location")
 def fetch_location_from_ip(ip:Optional[str] = None) -> Dict[str, Any]:
     return{"result": get_location_from_ip(ip) }
@@ -42,7 +40,6 @@ def planner_agent_tool(query: str) -> Dict[str, Any]:
         plan_steps = plan_result.model_dump().get("plan", [])
     else:
         plan_steps = plan_result.get("plan", [])
-    print("plan_steps", plan_steps)
     return {"results":plan_steps}
 
 def ping() -> str:

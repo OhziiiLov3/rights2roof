@@ -19,7 +19,6 @@ def pipeline_query(user_query:str)-> Dict[str,Any]:
 
     # Step 1 : Planner Agent
     plan_result = planner_agent(user_query)
-  
     if hasattr(plan_result, "model_dump"):
         plan_steps = plan_result.model_dump().get("plan", [])
     elif isinstance(plan_result, str):

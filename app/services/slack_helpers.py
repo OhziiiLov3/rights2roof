@@ -2,6 +2,7 @@ import re
 import asyncio
 import logging
 import time
+import redis
 from fastmcp import Client
 from slack_sdk import WebClient
 from app.agents.pipeline_query import pipeline_query
@@ -14,8 +15,13 @@ load_dotenv()
 
 MCP_SERVER_URL = "http://127.0.0.1:5200/mcp"
 
-# TEMPORARY -> (will can add this to redis to handles logs and persisit)
-user_request_log = {}
+# connect to Redis
+r = redis.Redis(
+    host=os.getenv("REDIS_HOST","localhost"),
+    port=int(os.getenv("REDIS_PORT", 6379)),
+    db=0,
+    decode_responses=True
+)
 
 # Rate limit config
 MAX_REQUESTS_PER_HOUR = 10
@@ -25,6 +31,7 @@ RATE_LIMIT_WINDOW = 3600  # seconds in 1 hour
 
 # Allowed Topics for user query santitation
 # first pass to test topics
+
 # ALLOWED_TOPICS = ["rent", "housing","moving","eviction","tenant","lease","landlord","assistance", "housing repairs"]
 
 ALLOWED_PATTERNS = [
@@ -39,6 +46,7 @@ ALLOWED_PATTERNS = [
     r"\bapartment(s)?\b",            # apartment, apartments
     r"\bflat(s)?\b",                 # flat, flats (UK term)
 ]
+
 
 # Helper Function: Clean up and validate user input before sending it to agents.
 def sanitize_query(query:str)-> str:
@@ -56,25 +64,30 @@ def sanitize_query(query:str)-> str:
     
     return cleaned
 
+
 # Helper Function to check user rate limits(10 requests per hour)
 def check_rate_limit(user_id:str)->bool:
     """
     Returns True if user is under rate limit, False if exceeded.
+    Uses Redis sorted sets to track request timestamps.
     """
     now = time.time()
-    if user_id not in user_request_log:
-        user_request_log[user_id] = []
+    key = f"user:{user_id}:requests"
 
-    # remove expired timestamps
-    user_request_log[user_id] =[
-        timestamp for timestamp in user_request_log[user_id] if now - timestamp < RATE_LIMIT_WINDOW
-    ]
-    
-    if len(user_request_log[user_id]) >= MAX_REQUESTS_PER_HOUR:
+    # remove expired requests from the sorted set
+    r.zremrangebyscore(key, 0, now - RATE_LIMIT_WINDOW)
+
+    # Count how many requests remain in the last hour
+    current_count = r.zcard(key)
+
+    if current_count >= MAX_REQUESTS_PER_HOUR:
         return False
-    # log current request
-    user_request_log[user_id].append(now)
-    print("Request",user_request_log)
+    
+    # Add the new request timestamp
+    r.zadd(key, {str(now): now})
+    #  ensures key expires eventually(if user goes inactive)
+    r.expire(key, RATE_LIMIT_WINDOW)
+
     return True
 
 
@@ -120,8 +133,7 @@ async def post_slack_thread(client: WebClient,channel_id: str, user_id: str, que
             thread_ts=thread_ts,
             text=final_answer
         )
-
-      
+ 
         print(f"[Thread] Channel: {channel_id} | User: {user_id} | Answer: {final_answer}")
         
     except Exception as e:
