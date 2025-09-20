@@ -2,7 +2,7 @@ version: "3.9"
 services:
   fastapi:
     build: .
-    command: uv run python server/slack_webhook.py
+    command: uv run python services/slack_webhook.py
     ports:
       - "5200:5200"
     volumes:
