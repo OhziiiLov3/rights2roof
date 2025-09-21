@@ -3,6 +3,7 @@ import redis
 import os
 from dotenv import load_dotenv
 load_dotenv()
+from typing import List 
 
 
 # connect to Redis
@@ -20,7 +21,6 @@ RATE_LIMIT_WINDOW = 3600  # seconds in 1 hour
 
 
 
-
 # Helper Function to check user rate limits(10 requests per hour)
 def check_rate_limit(user_id:str)->bool:
     """
@@ -29,13 +29,11 @@ def check_rate_limit(user_id:str)->bool:
     """
     now = time.time()
     key = f"user:{user_id}:requests"
-
     # remove expired requests from the sorted set
     r.zremrangebyscore(key, 0, now - RATE_LIMIT_WINDOW)
 
     # Count how many requests remain in the last hour:
     current_count = r.zcard(key)
-
     if current_count >= MAX_REQUESTS_PER_HOUR:
         return False
     
@@ -43,5 +41,17 @@ def check_rate_limit(user_id:str)->bool:
     r.zadd(key, {str(now): now})
     #  ensures key expires eventually(if user goes inactive)
     r.expire(key, RATE_LIMIT_WINDOW)
-
     return True
+
+# === Chat History APIs (add & get messages)===
+def add_message(user_id:str, message: str, expire_days: int = 1) -> None:
+    """Add a message to Redis sorted set with timestamps"""
+    now = time.time()
+    key = f"user:{user_id}:messages"
+    r.zadd(key,{message:now})
+    r.expire(key, expire_days * 24 * 3600)
+
+def get_messages(user_id: str, limit: int = 20) -> List[str]:
+    """Get last N messages for a user"""
+    key = f"user:{user_id}:messages"
+    return r.zrevrange(key, 0, limit - 1)

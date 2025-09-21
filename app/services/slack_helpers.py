@@ -5,6 +5,7 @@ import logging
 # from fastmcp import Client
 from slack_sdk import WebClient
 from app.pipelines.pipeline_query import pipeline_query
+from app.services.redis_helpers import add_message
 from langsmith import traceable
 
 
@@ -46,11 +47,9 @@ def sanitize_query(query:str)-> str:
     cleaned = re.sub(r"<@[\w\d]+>", "", query)
     # Remove Slack markdown chars(*,_,``) and removes whitespace
     cleaned = re.sub(r"[*_`]","",cleaned).strip()
-
     # check for topic relavance
     if not any(re.search(pattern, cleaned.lower()) for pattern in ALLOWED_PATTERNS):
         raise ValueError("Query not related to housing/tenant issues.")
-    
     return cleaned
 
 
@@ -99,6 +98,9 @@ async def post_slack_thread(client: WebClient,channel_id: str, user_id: str, que
             thread_ts=thread_ts,
             text=final_answer
         )
+
+        # save bot response in redis 
+        add_message(user_id, f"Rights2Roof Final Answer: {final_answer}")
  
         print(f"[Thread] Channel: {channel_id} | User: {user_id} | Answer: {final_answer}")
         
@@ -109,3 +111,5 @@ async def post_slack_thread(client: WebClient,channel_id: str, user_id: str, que
             channel=channel_id,
             text=f"<@{user_id}> Error fetching housing info: {str(e)}"
         )
+    # logs errors
+        add_message(user_id, f"BOT_ERROR: {str(e)}")
