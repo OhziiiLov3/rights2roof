@@ -5,7 +5,7 @@ import logging
 # from fastmcp import Client
 from slack_sdk import WebClient
 from app.pipelines.pipeline_query import pipeline_query
-from app.services.redis_helpers import add_message
+from app.services.redis_helpers import add_message, set_last_thread
 from langsmith import traceable
 
 
@@ -90,17 +90,19 @@ async def post_slack_thread(client: WebClient,channel_id: str, user_id: str, que
 
         # creates placeholder for message to respond in the thread 
         thread_ts = placeholder["ts"]
+        # save thread_ts
+        set_last_thread(user_id, thread_ts)
 
         # Post final answer in the thread
         await asyncio.to_thread(
             client.chat_postMessage,
             channel=channel_id,
             thread_ts=thread_ts,
-            text=final_answer
+            text=f"🏠 Rights2Roof:\n{final_answer}"
         )
 
         # save bot response in redis 
-        add_message(user_id, f"Rights2Roof Final Answer: {final_answer}")
+        add_message(user_id, f"FINAL_ANSWER: {final_answer}")
  
         print(f"[Thread] Channel: {channel_id} | User: {user_id} | Answer: {final_answer}")
         

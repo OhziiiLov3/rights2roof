@@ -5,7 +5,7 @@ import os
 from dotenv import load_dotenv
 from slack_sdk import WebClient
 from app.services.slack_helpers import sanitize_query, post_slack_thread 
-from app.services.redis_helpers import check_rate_limit , add_message, get_messages
+from app.services.redis_helpers import check_rate_limit , add_message, get_messages , get_last_thread
 load_dotenv()
 
 
@@ -20,7 +20,7 @@ client = WebClient(token=SLACK_BOT_TOKEN)
 
 
 
-# Slack Slash Command Endpoint
+# POST/slack/rights-2-roof -> Users query and responds to slack channel with answer
 @app.post("/slack/rights-2-roof")
 async def slack_roof(text: str = Form(...),user_id: str = Form(...),channel_id: str = Form(...),):
     """
@@ -55,7 +55,7 @@ async def slack_roof(text: str = Form(...),user_id: str = Form(...),channel_id: 
             "text": f"Sorry, your query isn't related to housing/tenant issues:{str(error)}"
         }
 
-# /rights-2-roof-history
+# POST/rights-2-roof-history -> post request and responds with message history to slack
 @app.post("/slack/rights-2-roof-history")
 async def slack_history(user_id: str = Form(...), channel_id: str = Form(...), limit = 10):
     """Handles /rights-2-roof-history to fetch recent conversation history."""
@@ -68,14 +68,26 @@ async def slack_history(user_id: str = Form(...), channel_id: str = Form(...), l
         }
     
     formatted = "\n".join(history)
+    # Get the last thread_ts for this user 
+    thread_ts = get_last_thread(user_id)
 
-    await asyncio.to_thread(
-        client.chat_postMessage,
-        channel=channel_id,
-        text=f"Your recent Rights2Roof history:\n ```{formatted}```"
-    )
+    if not thread_ts:
+        # fallback-> post as a new message
+        await asyncio.to_thread(
+            client.chat_postMessage,
+            channel=channel_id,
+            text=f"Your recent Rights2Roof history:\n ```{formatted}```"
+        )
+    else:
+        # post inside last thread
+        await asyncio.to_thread(
+            client.chat_postMessage,
+            channel=channel_id,
+            thread_ts=thread_ts,
+            text=f"Your recent Rights2Roof history:\n ```{formatted}```"
+        )
 
-    return  {
+    return {
             "response_type": "ephemeral",
             "text": "History sent to Channel!"
         }
