@@ -16,5 +16,10 @@ class ToolOutput(BaseModel):
     output: Any
     step: Optional[str] = None 
 
+# Define Schema for User Data stored in Redis
+class UserData(BaseModel):
+    user_id: str
+    number_of_queries: int = 0
+    chat_history: Optional[List[dict]] = []
 
 
