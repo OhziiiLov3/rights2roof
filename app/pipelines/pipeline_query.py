@@ -30,15 +30,15 @@ def pipeline_query(user_query:str, user_id: str)-> Dict[str,Any]:
     logging.info(f"[Pipeline] Planner output: {plan_result}")
 
     # Step 3: Rag Agent goes here 
-    #  rag_result = rag_agent(plan_result, user_query)
+    #  e.g -> rag_result = rag_agent(plan_result, user_query)
 
 
     # Step 4: Executor goes here
-    #  executor_result = executor_agent(plan_result, rag_result)
+    #  e.g -> executor_result = executor_agent(rag_result, plan_result, user_query)
 
 
 
-    # Cache the final answer (will replace with exuection)
+    # Cache the final answer (will replace with execution_result)
     final_answer = {"plan": plan_result.model_dump()}
     cache_result(cache_key, json.dumps(final_answer))
 
