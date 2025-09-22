@@ -3,7 +3,7 @@ import redis
 import os
 from dotenv import load_dotenv
 load_dotenv()
-from typing import List 
+from typing import List , Any, Optional
 
 
 # connect to Redis
@@ -18,9 +18,7 @@ r = redis.Redis(
 MAX_REQUESTS_PER_HOUR = 10
 RATE_LIMIT_WINDOW = 3600  # seconds in 1 hour
 
-
-
-
+# === Rate Limits ===
 # Helper Function to check user rate limits(10 requests per hour)
 def check_rate_limit(user_id:str)->bool:
     """
@@ -66,3 +64,13 @@ def get_last_thread(user_id:str)-> str | None:
     """Retrieve the last slack thread_ts for a user"""
     key = f"user:{user_id}:last_thread"
     return r.get(key)
+
+# Caching APIs
+def cache_result(key: str, value: Any, expire_seconds: int = 3600) -> None:
+    """Cache any result in redis"""
+    r.set(key, value, ex=expire_seconds)
+
+def get_cached_result(key:str) -> Optional[str]:
+    """Return cached value if exists, else None"""
+    return r.get(key)
+

@@ -74,12 +74,10 @@ async def post_slack_thread(client: WebClient,channel_id: str, user_id: str, que
 
 
         # TEMPORARY :runs pipeline query locally for now 
-        result = pipeline_query(query_text)
-        logging.info(f"Pipeline result: {result.get('plan')}")
+        result = pipeline_query(query_text, user_id)
+        logging.info(f"Pipeline result: {result}")
 
-        # plan is key coming from pydantic model 
-        plan_steps = result.get("plan", [])
-        final_answer = "\n".join(f"{i+1}. {step}" for i, step in enumerate(plan_steps))
+       
 
         # Post a placeholder message first(this creates the thread)
         placeholder = await asyncio.to_thread(
@@ -98,13 +96,13 @@ async def post_slack_thread(client: WebClient,channel_id: str, user_id: str, que
             client.chat_postMessage,
             channel=channel_id,
             thread_ts=thread_ts,
-            text=f"🏠 Rights2Roof:\n{final_answer}"
+            text=f"🏠 Rights2Roof:\n{result}"
         )
 
         # save bot response in redis 
-        add_message(user_id, f"FINAL_ANSWER: {final_answer}")
+        add_message(user_id, f"FINAL_ANSWER: {result}")
  
-        print(f"[Thread] Channel: {channel_id} | User: {user_id} | Answer: {final_answer}")
+        print(f"[Thread] Channel: {channel_id} | User: {user_id} | Answer: {result}")
         
     except Exception as e:
         logging.exception(f"[Right2RoofBot] Error in planner agent")
