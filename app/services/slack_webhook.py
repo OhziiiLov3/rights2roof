@@ -67,7 +67,7 @@ async def slack_history(user_id: str = Form(...), channel_id: str = Form(...), l
             "text": "No recent history found"
         }
     
-    formatted = "\n".join(history)
+    formatted = "\n".join([f"{i+1}. {msg}" for i, msg in enumerate(history)])
     # Get the last thread_ts for this user 
     thread_ts = get_last_thread(user_id)
 
@@ -76,7 +76,7 @@ async def slack_history(user_id: str = Form(...), channel_id: str = Form(...), l
         await asyncio.to_thread(
             client.chat_postMessage,
             channel=channel_id,
-            text=f"Your recent Rights2Roof history:\n ```{formatted}```"
+            text=f"Your recent Rights2Roof history:\n{formatted}"
         )
     else:
         # post inside last thread
@@ -84,7 +84,7 @@ async def slack_history(user_id: str = Form(...), channel_id: str = Form(...), l
             client.chat_postMessage,
             channel=channel_id,
             thread_ts=thread_ts,
-            text=f"Your recent Rights2Roof history:\n ```{formatted}```"
+            text=f"Your recent Rights2Roof history:\n{formatted}"
         )
 
     return {

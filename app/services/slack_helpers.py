@@ -74,7 +74,7 @@ async def post_slack_thread(client: WebClient,channel_id: str, user_id: str, que
 
 
         # TEMPORARY :runs pipeline query locally for now 
-        result = pipeline_query(query_text, user_id)
+        result = pipeline_query(query_text, user_id=user_id)
         logging.info(f"Pipeline result: {result}")
 
        
