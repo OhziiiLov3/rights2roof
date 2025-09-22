@@ -1,12 +1,15 @@
 version: "3.9"
+
 services:
-  fastapi:
+  slack_api:
     build: .
-    command: uv run python services/slack_webhook.py
+    command: >
+      uv run uvicorn app.services.slack_webhook:app
+      --host 0.0.0.0 --port 8000
     ports:
-      - "5200:5200"
+      - "8000:8000"
     volumes:
-      - .:/app   
+      - .:/app   # optional for live reload in dev
   mcp:
     build: .
     command: uv run python server/mcp_server.py
