@@ -9,6 +9,7 @@ RUN pip install --no-cache-dir uv
 
 
 WORKDIR /app
+COPY app/ app/ 
 
 
 #copy our lock files

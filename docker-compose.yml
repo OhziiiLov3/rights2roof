@@ -3,20 +3,14 @@ version: "3.9"
 services:
   slack_api:
     build: .
-    command: >
+    command: 
       uv run uvicorn app.services.slack_webhook:app
       --host 0.0.0.0 --port 8000
     ports:
       - "8000:8000"
-    volumes:
-      - .:/app   # optional for live reload in dev
+
   mcp:
     build: .
-    command: uv run python server/mcp_server.py
+    command: uv run python -m app.server.mcp_server
     ports:
       - "5300:5300"
-    volumes:
-      - .:/app   # optional: same as above
-
-
-#.:/app is so if we change files in any of these services we dont have to recompose the docker container
