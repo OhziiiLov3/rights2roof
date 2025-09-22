@@ -11,7 +11,7 @@ dependencies = [
     "langchain-community>=0.3.29",
     "langchain-openai>=0.3.33",
     "langchain-tavily>=0.2.11",
-    "langchain-chroma>=0.2.6"
+    "langchain-chroma>=0.2.6",
     "langgraph>=0.6.7",
     "pydantic>=2.11.8",
     "python-dotenv>=1.1.1",
@@ -19,7 +19,7 @@ dependencies = [
     "slack-sdk>=3.36.0",
     "uvicorn>=0.35.0",
     "wikipedia>=1.4.0",
-    "pypdf>=6.0.0"
+    "pypdf>=6.0.0",
     "langsmith>=0.4.28",
     "python-multipart>=0.0.20",
 ]
