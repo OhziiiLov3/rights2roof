@@ -20,6 +20,7 @@ dependencies = [
     "wikipedia>=1.4.0",
     "langsmith>=0.4.28",
     "python-multipart>=0.0.20",
+    "langchain-mcp-adapters>=0.1.0",
     "newsapi-python>=0.2.7",
     "langchain-core>=0.3.27",
 ]

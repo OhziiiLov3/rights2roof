@@ -9,3 +9,7 @@ wheels/
 # Virtual environments
 .venv
 .env
+
+
+app/server/app.py
+.DS_store
