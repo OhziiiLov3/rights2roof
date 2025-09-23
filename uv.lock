@@ -1200,6 +1200,18 @@ wheels = [
 ]
 
 [[package]]
+name = "newsapi-python"
+version = "0.2.7"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "requests" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f8/4b/12fb9495211fc5a6d3a96968759c1a48444124a1654aaf65d0de80b46794/newsapi-python-0.2.7.tar.gz", hash = "sha256:a4b66d5dd9892198cdaa476f7542f2625cdd218e5e3121c8f880b2ace717a3c2", size = 7485, upload-time = "2023-03-02T13:15:35.89Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/74/47/e3b099102f0c826d37841d2266e19f1568dcf58ba86e4c6948e2a124f91d/newsapi_python-0.2.7-py2.py3-none-any.whl", hash = "sha256:11d34013a24d92ca7b7cbdac84ed2d504862b1e22467bc2a9a6913a70962318e", size = 7942, upload-time = "2023-03-02T13:15:34.475Z" },
+]
+
+[[package]]
 name = "numpy"
 version = "2.3.3"
 source = { registry = "https://pypi.org/simple" }
@@ -1903,10 +1915,12 @@ dependencies = [
     { name = "fastmcp" },
     { name = "langchain", extra = ["openai"] },
     { name = "langchain-community" },
+    { name = "langchain-core" },
     { name = "langchain-openai" },
     { name = "langchain-tavily" },
     { name = "langgraph" },
     { name = "langsmith" },
+    { name = "newsapi-python" },
     { name = "pydantic" },
     { name = "python-dotenv" },
     { name = "python-multipart" },
@@ -1922,10 +1936,12 @@ requires-dist = [
     { name = "fastmcp", specifier = ">=2.12.3" },
     { name = "langchain", extras = ["openai"], specifier = ">=0.3.27" },
     { name = "langchain-community", specifier = ">=0.3.29" },
+    { name = "langchain-core", specifier = ">=0.3.27" },
     { name = "langchain-openai", specifier = ">=0.3.33" },
     { name = "langchain-tavily", specifier = ">=0.2.11" },
     { name = "langgraph", specifier = ">=0.6.7" },
     { name = "langsmith", specifier = ">=0.4.28" },
+    { name = "newsapi-python", specifier = ">=0.2.7" },
     { name = "pydantic", specifier = ">=2.11.8" },
     { name = "python-dotenv", specifier = ">=1.1.1" },
     { name = "python-multipart", specifier = ">=0.0.20" },
