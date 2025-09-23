@@ -130,6 +130,15 @@ wheels = [
 ]
 
 [[package]]
+name = "async-timeout"
+version = "5.0.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/a5/ae/136395dfbfe00dfc94da3f3e136d0b13f394cba8f4841120e34226265780/async_timeout-5.0.1.tar.gz", hash = "sha256:d9321a7a3d5a6a5e187e824d2fa0793ce379a202935782d555d6e9d2735677d3", size = 9274, upload-time = "2024-11-06T16:41:39.6Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/fe/ba/e2081de779ca30d473f21f5b30e0e737c438205440784c7dfc81efc2b029/async_timeout-5.0.1-py3-none-any.whl", hash = "sha256:39e3809566ff85354557ec2398b55e096c8364bacac9405a7a1fa429e77fe76c", size = 6233, upload-time = "2024-11-06T16:41:37.9Z" },
+]
+
+[[package]]
 name = "attrs"
 version = "25.3.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1794,12 +1803,15 @@ wheels = [
 ]
 
 [[package]]
-name = "networkx"
-version = "3.5"
+name = "newsapi-python"
+version = "0.2.7"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/6c/4f/ccdb8ad3a38e583f214547fd2f7ff1fc160c43a75af88e6aec213404b96a/networkx-3.5.tar.gz", hash = "sha256:d4c6f9cf81f52d69230866796b82afbccdec3db7ae4fbd1b65ea750feed50037", size = 2471065, upload-time = "2025-05-29T11:35:07.804Z" }
+dependencies = [
+    { name = "requests" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f8/4b/12fb9495211fc5a6d3a96968759c1a48444124a1654aaf65d0de80b46794/newsapi-python-0.2.7.tar.gz", hash = "sha256:a4b66d5dd9892198cdaa476f7542f2625cdd218e5e3121c8f880b2ace717a3c2", size = 7485, upload-time = "2023-03-02T13:15:35.89Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/eb/8d/776adee7bbf76365fdd7f2552710282c79a4ead5d2a46408c9043a2b70ba/networkx-3.5-py3-none-any.whl", hash = "sha256:0030d386a9a06dee3565298b4a734b68589749a544acbb6c412dc9e2489ec6ec", size = 2034406, upload-time = "2025-05-29T11:35:04.961Z" },
+    { url = "https://files.pythonhosted.org/packages/74/47/e3b099102f0c826d37841d2266e19f1568dcf58ba86e4c6948e2a124f91d/newsapi_python-0.2.7-py2.py3-none-any.whl", hash = "sha256:11d34013a24d92ca7b7cbdac84ed2d504862b1e22467bc2a9a6913a70962318e", size = 7942, upload-time = "2023-03-02T13:15:34.475Z" },
 ]
 
 [[package]]
@@ -2961,22 +2973,15 @@ wheels = [
 ]
 
 [[package]]
-name = "redisvl"
-version = "0.8.2"
+name = "redis-cli"
+version = "1.0.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "jsonpath-ng" },
-    { name = "ml-dtypes" },
-    { name = "numpy" },
-    { name = "pydantic" },
-    { name = "python-ulid" },
-    { name = "pyyaml" },
     { name = "redis" },
-    { name = "tenacity" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d6/26/f3a5128d96eeeb5af0fc345156e48971ce0ce99689b62ba01dc855744c61/redisvl-0.8.2.tar.gz", hash = "sha256:3938ddcd093507c4c427cb431ac9faaa8bb999bb2ca116cbd57e4b7334fe18eb", size = 573106, upload-time = "2025-08-26T15:23:40.356Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/85/7a/464077bce2a14cd8399776ae0c694e7c240b58ffe4b231413013f2fb48fe/redis-cli-1.0.1.tar.gz", hash = "sha256:6be46d8e6ae638fec27cb425d499b7f25b1592402c74d5d17f5b85b5e7f988a0", size = 5958, upload-time = "2023-10-02T05:58:36.407Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/0e/16/a9eb70249c518b9b6a19efb32089bda8ecc146bafee360abd375eae7053e/redisvl-0.8.2-py3-none-any.whl", hash = "sha256:67b413387d72849d571723c95fa1183539d6fa60d6ac533513ee8e3e31874600", size = 152593, upload-time = "2025-08-26T15:23:38.393Z" },
+    { url = "https://files.pythonhosted.org/packages/7b/29/33cbdafefd22613cc003f837b6f0295462b2e91696180f06c5210f576a1b/redis_cli-1.0.1-py3-none-any.whl", hash = "sha256:e9f6af4a8b7591d8bfd1e23be89bdd9666ce824df881748fb02b88dd30575dc8", size = 5851, upload-time = "2023-10-02T05:58:32.924Z" },
 ]
 
 [[package]]
@@ -3145,16 +3150,19 @@ dependencies = [
     { name = "langchain", extra = ["openai"] },
     { name = "langchain-chroma" },
     { name = "langchain-community" },
-    { name = "langchain-huggingface" },
+    { name = "langchain-core" },
     { name = "langchain-openai" },
     { name = "langchain-redis" },
     { name = "langchain-tavily" },
     { name = "langgraph" },
     { name = "langsmith" },
+    { name = "newsapi-python" },
     { name = "pydantic" },
     { name = "pypdf" },
     { name = "python-dotenv" },
     { name = "python-multipart" },
+    { name = "redis" },
+    { name = "redis-cli" },
     { name = "requests" },
     { name = "sentence-transformers" },
     { name = "slack-sdk" },
@@ -3169,16 +3177,19 @@ requires-dist = [
     { name = "langchain", extras = ["openai"], specifier = ">=0.3.27" },
     { name = "langchain-chroma", specifier = ">=0.2.6" },
     { name = "langchain-community", specifier = ">=0.3.29" },
-    { name = "langchain-huggingface", specifier = ">=0.3.1" },
+    { name = "langchain-core", specifier = ">=0.3.27" },
     { name = "langchain-openai", specifier = ">=0.3.33" },
     { name = "langchain-redis", specifier = ">=0.2.3" },
     { name = "langchain-tavily", specifier = ">=0.2.11" },
     { name = "langgraph", specifier = ">=0.6.7" },
     { name = "langsmith", specifier = ">=0.4.28" },
+    { name = "newsapi-python", specifier = ">=0.2.7" },
     { name = "pydantic", specifier = ">=2.11.8" },
     { name = "pypdf", specifier = ">=6.0.0" },
     { name = "python-dotenv", specifier = ">=1.1.1" },
     { name = "python-multipart", specifier = ">=0.0.20" },
+    { name = "redis", specifier = ">=6.4.0" },
+    { name = "redis-cli", specifier = ">=1.0.1" },
     { name = "requests", specifier = ">=2.32.5" },
     { name = "sentence-transformers", specifier = ">=5.1.1" },
     { name = "slack-sdk", specifier = ">=3.36.0" },
