@@ -18,8 +18,15 @@ dependencies = [
     "slack-sdk>=3.36.0",
     "uvicorn>=0.35.0",
     "wikipedia>=1.4.0",
+    "pypdf>=6.0.0",
     "langsmith>=0.4.28",
     "python-multipart>=0.0.20",
+    "langchain-redis>=0.2.3",
+    "langchain-huggingface>=0.3.1",
+    "sentence-transformers>=5.1.1"
     "newsapi-python>=0.2.7",
     "langchain-core>=0.3.27",
+    "redis>=6.4.0",
+    "redis-cli>=1.0.1",
+    "langchain-mcp-adapters>=0.1.0",
 ]

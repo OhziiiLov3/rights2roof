@@ -6,6 +6,7 @@ from app.models.schemas import ToolOutput
 def time_tool_fn() -> ToolOutput:
     """Return the current date and time in ISO format."""
     now_iso = datetime.now(timezone.utc).isoformat() 
+    
     return ToolOutput(
         tool="time_tool",
         input={},
