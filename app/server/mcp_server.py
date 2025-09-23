@@ -5,6 +5,7 @@ import requests
 import os    
 from app.tools.wikipedia_tools import wikipedia_search
 from app.tools.geo_tools import get_location_from_ip
+from app.tools.google_news_tool import real_estate_news_tool
 from app.tools.tavily_tools import tavily_search
 from app.tools.time_tools import time_tool_fn
 from app.agents.planner_agent import planner_agent
@@ -17,6 +18,11 @@ rights2roof_server = FastMCP("rights2roof_tools")
 @rights2roof_server.tool(description="geolocation tool to find the users location")
 def fetch_location_from_ip(ip:Optional[str] = None) -> Dict[str, Any]:
     return{"result": get_location_from_ip(ip) }
+
+
+@rights2roof_server.tool(description="Search recent NewsAPI articles covering a broad range of real estate topics")
+def google_news_tool(query: str) -> Dict[str, Any]:
+    return{"result": real_estate_news_tool(query)}
 
 
 @rights2roof_server.tool(description="Search Wikipedia for information")
