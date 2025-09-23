@@ -8,17 +8,11 @@ from app.services.slack_helpers import sanitize_query, post_slack_thread
 from app.services.redis_helpers import check_rate_limit , add_message, get_messages , get_last_thread
 load_dotenv()
 
-
-
-
 app = FastAPI(title="Rights-2-Roof Slash Command")
 
 # intialize Slack Client 
 SLACK_BOT_TOKEN=os.getenv("SLACK_BOT_TOKEN")
 client = WebClient(token=SLACK_BOT_TOKEN)
-
-
-
 
 # POST/slack/rights-2-roof -> Users query and responds to slack channel with answer
 @app.post("/slack/rights-2-roof")
