@@ -33,5 +33,5 @@ def get_location_from_ip(ip:Optional[str] = None) -> ToolOutput:
 geo_tool = StructuredTool.from_function(
     func=get_location_from_ip,
     name="geo_location",
-    description="Get city, state, and country from an IP address.",
+    description="Get User's Location",
 )

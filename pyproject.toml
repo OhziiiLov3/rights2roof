@@ -23,4 +23,6 @@ dependencies = [
     "langchain-mcp-adapters>=0.1.0",
     "newsapi-python>=0.2.7",
     "langchain-core>=0.3.27",
+    "redis>=6.4.0",
+    "redis-cli>=1.0.1",
 ]
