@@ -1,54 +1,50 @@
 import os
 from dotenv import load_dotenv
-from langchain_community.document_loaders import PyPDFLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+import redis
 from langchain_openai import OpenAIEmbeddings
+from langchain_redis import RedisConfig, RedisVectorStore
+from langchain_community.document_loaders import PyPDFLoader
 from langchain_core.tools import StructuredTool
-from langchain_chroma import Chroma
+from app.models.schemas import ToolOutput
 
 load_dotenv()
+
 DIRECTORY_PATH = "app/resources/files"
+REDIS_URL=os.getenv("REDIS_URL", "redis://localhost:32771")
+redis_client = redis.from_url(REDIS_URL)
 
 embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
-vector_store = Chroma(
-    collection_name="rights2roof",
-    embedding_function=embeddings,
-    persist_directory="app/resources/vector-store"
-    )
+
+config = RedisConfig(
+    index_name="rights2roof",
+    redis_url=REDIS_URL,
+    embedding=embeddings
+)
+
+vector_store = RedisVectorStore(embeddings, config=config)
+retriever = vector_store.as_retriever(search_type="similarity", search_kwargs={"k": 5})
 
 def create_vector_store():
-    pdf_data = {}
     for filename in os.listdir(DIRECTORY_PATH):
         if filename.endswith(".pdf"):
             file_path = os.path.join(DIRECTORY_PATH, filename)
             loader = PyPDFLoader(file_path)
             pages = loader.load_and_split()
-            pdf_data[filename] = pages
+            vector_store.add_documents(documents=pages)
+            print(f"added {filename} to vector store")
+
+def get_context(query: str) -> ToolOutput:
+    context = retriever.invoke(query)
+    return ToolOutput(
+        tool="vector_store_tool",
+        input={"query": query},
+        output={context},
+        step="Provide relevant context from vector store based on user's query"
+    )
 
 
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=500,
-        chunk_overlap=100
-        ) # Implement the text splitter using RecursiveCharacterTextSplitter
-
-    chunks = {
-        title: text_splitter.transform_documents(docs)
-        for title, docs in pdf_data.items()
-    }
-
-    for title, chunk in chunks.items():
-        try:
-            vector_store.add_documents(documents=chunk)
-            print(f"added {title} to vector store")
-        except Exception as e:
-            print(f"Error adding {title}: {e}")
-
-
-def create_store():
-    create_vector_store()
-
-retriever_tool = StructuredTool(
-    name="vector_store_retriever_tool",
-    func=vector_store.as_retriever(search_kwargs={"k": 5}).invoke,
-    description="useful for when you need to answer questions about the knowledge base",
+vector_store_tool = StructuredTool.from_function(
+    func=get_context,
+    name="vector_store_tool",
+    description="Returns the relevant context from the vector store based on the user's query. Useful for retrieving information about rental housing laws and regulations."
 )
