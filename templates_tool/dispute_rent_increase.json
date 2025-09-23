@@ -1,0 +1,4 @@
+{
+  "name": "dispute_rent_increase",
+  "text": "Dear {landlord_name},\n\nI am writing to dispute the 20% rent increase at {property_address}.\n\n{issue_description}\n\nPlease consider this notice as per tenant rights.\n\nThank you,\n{tenant_name}"
+}

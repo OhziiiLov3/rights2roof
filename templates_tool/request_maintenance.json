@@ -1,0 +1,4 @@
+{
+  "name": "request_maintenance",
+  "text": "Dear {landlord_name},\n\nI am writing to request maintenance at {property_address} for the following issue:\n\n{issue_description}\n\nPlease arrange repairs at your earliest convenience.\n\nThank you,\n{tenant_name}"
+}
