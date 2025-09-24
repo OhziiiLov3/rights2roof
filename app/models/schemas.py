@@ -19,6 +19,6 @@ class ExecutionPlan(BaseModel):
         description="A list of steps to execute in order to answer a propmpt"
     )
 
-class RAGAgentResponse(BaseModel):
-  response: str = Field(description="The information the RAG agent was able to gather based on the context provided and the user's query")
-  query: str = Field(description="User's original query to the RAG agent")
+class RagAgentResponse(BaseModel):
+    query: str = Field(description="User's original query to the RAG agent")
+    response: str = Field(description="The information the RAG agent was able to gather based on the context provided and the user's query")
