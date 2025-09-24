@@ -3,15 +3,8 @@ from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.output_parsers.string import StrOutputParser
 from langsmith import traceable
-from langchain_community.document_loaders import PyPDFLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
-from langchain_core.documents import Document
-import redis
-from langchain_openai import OpenAIEmbeddings
-from langchain_redis import RedisConfig, RedisVectorStore
 from pydantic import BaseModel, Field
 from langchain_core.output_parsers import PydanticOutputParser
 from app.models.schemas import RagAgentResponse
@@ -19,7 +12,6 @@ from app.tools.vector_store_tool import get_context
 
 load_dotenv()
 llm = ChatOpenAI(model="gpt-4o-mini", temperature=0, verbose=True)
-DIRECTORY_PATH = "app/resources/files"
 
 #Base prompt for RAG agent
 system_prompt = """
