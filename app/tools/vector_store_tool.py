@@ -7,17 +7,10 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain_core.tools import StructuredTool
 from app.models.schemas import ToolOutput
 from langchain_community.vectorstores.redis.base import check_index_exists
+from app.services.redis_helpers import redis_client
 
 load_dotenv()
 DIRECTORY_PATH = "app/resources/files"
-
-#redis client setup
-redis_client = redis.Redis(
-    host=os.getenv("REDIS_HOST","localhost"),
-    port=int(os.getenv("REDIS_PORT", 6379)),
-    db=0,
-    decode_responses=True
-)
 
 #Vector store configurations
 INDEX_NAME = "rights2roof"

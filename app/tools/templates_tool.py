@@ -7,23 +7,24 @@ import pathlib
 import datetime
 from dotenv import load_dotenv
 from openai import OpenAI
+from app.services.redis_helpers import redis_client
 
 load_dotenv()
 
-REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
-REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
-REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
+# REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+# REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
+# REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
 
-redis_kwargs = {
-    "host": REDIS_HOST,
-    "port": REDIS_PORT,
-    "ssl": False,
-    "decode_responses": True,
-}
-if REDIS_PASSWORD:
-    redis_kwargs["password"] = REDIS_PASSWORD
+# redis_kwargs = {
+#     "host": REDIS_HOST,
+#     "port": REDIS_PORT,
+#     "ssl": False,
+#     "decode_responses": True,
+# }
+# if REDIS_PASSWORD:
+#     redis_kwargs["password"] = REDIS_PASSWORD
 
-r = redis.Redis(**redis_kwargs)
+# r = redis.Redis(**redis_kwargs)
 
 openai_api_key = os.getenv("OPENAI_API_KEY")
 if not openai_api_key:
@@ -34,14 +35,14 @@ client = OpenAI(api_key=openai_api_key)
 
 def test_redis_connection():
     try:
-        print("Connected to Redis!" if r.ping() else "Redis ping failed")
+        print("Connected to Redis!" if redis_client.ping() else "Redis ping failed")
     except Exception as e:
         print(f"Redis connection error: {e}")
 
 
 def create_redis_index():
     try:
-        r.ft("idx:templates").info()
+        redis_client.ft("idx:templates").info()
         print("Index exists")
     except redis.exceptions.ResponseError:
         schema = (
@@ -55,7 +56,7 @@ def create_redis_index():
             "DIM", "1536",
             "DISTANCE_METRIC", "COSINE"
         )
-        r.execute_command("FT.CREATE", "idx:templates", *schema)
+        redis_client.execute_command("FT.CREATE", "idx:templates", *schema)
         print("Created index")
 
 
@@ -76,8 +77,8 @@ def add_template(template_name: str, template_text: str):
         "template_text": template_text,
         "embedding": embedding
     }
-    r.delete(f"template:{template_name}")
-    r.execute_command(
+    redis_client.delete(f"template:{template_name}")
+    redis_client.execute_command(
         "JSON.SET", f"template:{template_name}", ".", json.dumps(doc))
     print(f"Template '{template_name}' added.")
 
@@ -122,7 +123,7 @@ def search_templates(query: str, top_k: int = 3):
 
 def fetch_template_from_redis(template_name: str):
     key = f"template:{template_name}"
-    raw = r.execute_command("JSON.GET", key)
+    raw = redis_client.execute_command("JSON.GET", key)
     if not raw:
         raise ValueError(f"Not found: {template_name}")
     doc = json.loads(raw)
