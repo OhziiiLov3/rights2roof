@@ -11,8 +11,6 @@ from app.services.redis_helpers import redis_client
 
 load_dotenv()
 DIRECTORY_PATH = "app/resources/files"
-INDEX_NAME = "rights2roof"
-
 
 #Vector store configurations
 INDEX_NAME = "rights2roof"
