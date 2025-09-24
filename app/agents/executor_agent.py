@@ -1,7 +1,7 @@
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_openai import ChatOpenAI
-from app.models.schemas import ExecutionPlan, ToolOutput, ExecutorOutput
+from app.models.schemas import ExecutionPlan, ToolOutput, ExecutorOutput, RAGAgentResponse
 from app.tools import geo_tools, wikipedia_tools, tavily_tools, time_tools, google_news_tool
 from langsmith import traceable
 from typing import List
@@ -71,7 +71,7 @@ produce a concise and actionable final answer.
 """
 
 #Step 7: Create combined system prompt
-combined_system_prompt=ChatPromptTemplate.from_messages([
+combined_prompt=ChatPromptTemplate.from_messages([
     ("system",combined_system_message),
     ("human","User query: {query}\n\nObservations: {observations}")
 ])
@@ -90,18 +90,10 @@ def execute_tool_call(tool_call:dict)->ToolOutput:
     except Exception as error:
         return ToolOutput(tool=tool_name,input=tool_input,output=f"Error: {str(error)}")
 
-geo_call = {"tool": "geo_location", "input": "8.8.8.8"}  # IP address for testing
-geo_result = execute_tool_call(geo_call)
-print("Geo Tool Output:", geo_result)
 
-# Example 2: Test wikipedia_search
-wiki_call = {"tool": "wikipedia_search", "input": "Venezuela history"}
-wiki_result = execute_tool_call(wiki_call)
-print("Wikipedia Tool Output:", wiki_result)
-
-
-#Step X: Create function to run our agent - we will need to come back and update with RAG Agent into argument to replace "query"
-def execute_agent(plan:ExecutionPlan,query:str,verbose=False)->ExecutorOutput:
+#Step X: Create function to run our agent
+@traceable 
+def execute_agent(rag_result:RAGAgentResponse,plan_result:ExecutionPlan,query:str,verbose=False)->ExecutorOutput:
     """
     runs each step in the plan:
     1) Uses LLM to select the best tool
@@ -109,5 +101,29 @@ def execute_agent(plan:ExecutionPlan,query:str,verbose=False)->ExecutorOutput:
     3) Combines a final answer from the tool outputs
     """
 
-    observations:List[ToolOutput]=[]
-    return ExecutorOutput(final_answer="",observations=[])
+#Step XX: Decide what tools to call
+    try:
+        decision_chain=decision_prompt | executor_llm | tool_parser 
+        tools_call=decision_chain.invoke({
+            "query":query,
+            "plan":plan_result.model_dump(),
+            "rag": rag_result.response
+        })
+
+    #Step XXX: Create observations
+        observations=[execute_tool_call(tool) for tool in tools_call]
+
+    #Step XX: Create synthesizer (last step might change)
+        combined_chain = combined_prompt| combined_llm
+        final_answer = combined_chain.invoke({
+                "query": query,
+                "observations": [obs.dict() for obs in observations]
+            })
+
+        return ExecutorOutput(final_answer=final_answer, observations=observations)
+
+    except Exception as e:
+        return ExecutorOutput(final_answer=f"Executor agent failed: {str(e)}", observations=[])
+
+#Step XXX: Create decision chain
+
