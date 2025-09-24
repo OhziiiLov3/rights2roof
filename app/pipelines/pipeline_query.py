@@ -5,6 +5,7 @@ from typing import Dict, Any
 from langsmith import traceable
 from app.services.redis_helpers import get_cached_result, cache_result
 from app.agents.planner_agent import planner_agent
+from app.agents.rag_agent import rag_agent
 
 
 @traceable
@@ -30,7 +31,8 @@ def pipeline_query(user_query:str, user_id: str)-> Dict[str,Any]:
     logging.info(f"[Pipeline] Planner output: {plan_result}")
 
     # Step 3: Rag Agent goes here 
-    #  e.g -> rag_result = rag_agent(plan_result, user_query)
+    rag_result = rag_agent(plan_result, user_query)
+    logging.info(f"[Pipeline] RAG output: {rag_result}")
 
 
     # Step 4: Executor goes here
@@ -39,11 +41,12 @@ def pipeline_query(user_query:str, user_id: str)-> Dict[str,Any]:
 
 
     # Cache the final answer (will replace with execution_result)
-    final_answer = {"plan": plan_result.model_dump()}
+    final_answer = {"plan": plan_result.model_dump(), "rag_response": rag_result}
     cache_result(cache_key, json.dumps(final_answer))
 
     # right now just return plan_result 
-    return {"plan": plan_result, "cached": False}
+    return {"plan": plan_result, "rag_result": rag_result, "cached": False}
 
-
+result = pipeline_query("What are the tenant rights in NYC regarding rent increases?", user_id="user123")
+print(result)
 
