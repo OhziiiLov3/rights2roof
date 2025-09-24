@@ -13,7 +13,9 @@ load_dotenv()
 DIRECTORY_PATH = "app/resources/files"
 INDEX_NAME = "rights2roof"
 
+
 #Vector store configurations
+INDEX_NAME = "rights2roof"
 embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
 config = RedisConfig(
     index_name=INDEX_NAME,
