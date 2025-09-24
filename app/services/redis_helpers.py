@@ -58,7 +58,7 @@ def get_messages(user_id: str, limit: int = 20) -> List[str]:
 def set_last_thread(user_id:str, thread_ts: str, expire_days: int = 1)-> None:
     """Stores the last slack thread_timestamp for a user"""
     key = f"user:{user_id}:last_thread"
-    redis.setex(key, expire_days * 24 * 3600, thread_ts)
+    redis_client.setex(key, expire_days * 24 * 3600, thread_ts)
 
 def get_last_thread(user_id:str)-> str | None:
     """Retrieve the last slack thread_ts for a user"""
