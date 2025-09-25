@@ -89,6 +89,7 @@ def planner_agent(query: str):
     try:
         # 1 Generate plan with tool references
         plan_result: ExecutionPlan = planner_chain.invoke({"query": query})
+        
         # 2️ Execute each tool to enrich steps
         enriched_plan = []
         for step in plan_result.plan:

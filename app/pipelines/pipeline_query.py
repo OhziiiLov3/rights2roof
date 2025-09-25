@@ -5,45 +5,52 @@ from typing import Dict, Any
 from langsmith import traceable
 from app.services.redis_helpers import get_cached_result, cache_result
 from app.agents.planner_agent import planner_agent
+from app.agents.rag_agent import rag_agent
+from app.agents.executor_agent import execute_agent
+from app.models.schemas import ExecutorOutput
 
 
 @traceable
-def pipeline_query(user_query:str, user_id: str)-> Dict[str,Any]:
+def pipeline_query(user_query: str, user_id: str) -> str:
     """
-    Full pipeline to process a user query:
-    1. Planner generates steps
-    2. RAG retrieves supporting info (stubbed)
-    3. Executor synthesizes final answer (stubbed)
+    Run the full pipeline and return only the executor final answer for Slack.
+    Full pipeline info is cached for history.
     """
     logging.info(f"[Pipeline] Running Planner for query: {user_query}")
 
-    # Step 1: chech if query is cached
+    # Step 1: Check cache
     cache_key = f"user:{user_id}:query:{user_query}"
     cached = get_cached_result(cache_key)
     if cached:
-        logging.info(f"[Pipeline] Cache hit for {user_query}")
-        final_answer = json.loads(cached)
-        return {"final_answer": final_answer, "cached": True}
-    
-    # Step 2 : Planner Agent
+        cached_data = json.loads(cached)
+        return cached_data.get("executor_response", "No cached answer")
+
+    # Step 2: Planner
     plan_result = planner_agent(user_query)
-    logging.info(f"[Pipeline] Planner output: {plan_result}")
 
-    # Step 3: Rag Agent goes here 
-    #  e.g -> rag_result = rag_agent(plan_result, user_query)
+    # Step 3: RAG
+    rag_result = rag_agent(plan_result, user_query)
+    rag_response = rag_result.get("response", "No response available")
 
+    # Step 4: Executor
+    try:
+        executor_result = execute_agent(rag_result, plan_result, user_query)
+        executor_response = getattr(executor_result, "final_answer", str(executor_result))
+    except Exception as e:
+        executor_response = f"Executor agent failed: {str(e)}"
 
-    # Step 4: Executor goes here
-    #  e.g -> executor_result = executor_agent(rag_result, plan_result, user_query)
+    # cache the plan, rag and excutor results 
+    cached_obj = {
+        "plan": plan_result.model_dump() if hasattr(plan_result, "model_dump") else plan_result,
+        "rag_response": rag_response,
+        "executor_response": executor_response
+    }
 
+    # Cache the full pipeline
+    cache_result(cache_key, json.dumps(cached_obj))
 
-
-    # Cache the final answer (will replace with execution_result)
-    final_answer = {"plan": plan_result.model_dump()}
-    cache_result(cache_key, json.dumps(final_answer))
-
-    # right now just return plan_result 
-    return {"plan": plan_result, "cached": False}
+    # Return just the executor response
+    return executor_response
 
 
 

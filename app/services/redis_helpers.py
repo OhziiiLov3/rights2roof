@@ -28,17 +28,17 @@ def check_rate_limit(user_id:str)->bool:
     now = time.time()
     key = f"user:{user_id}:requests"
     # remove expired requests from the sorted set
-    r.zremrangebyscore(key, 0, now - RATE_LIMIT_WINDOW)
+    redis_client.zremrangebyscore(key, 0, now - RATE_LIMIT_WINDOW)
 
     # Count how many requests remain in the last hour:
-    current_count = r.zcard(key)
+    current_count = redis_client.zcard(key)
     if current_count >= MAX_REQUESTS_PER_HOUR:
         return False
     
     # Add the new request timestamp
-    r.zadd(key, {str(now): now})
+    redis_client.zadd(key, {str(now): now})
     #  ensures key expires eventually(if user goes inactive)
-    r.expire(key, RATE_LIMIT_WINDOW)
+    redis_client.expire(key, RATE_LIMIT_WINDOW)
     return True
 
 # === Chat History APIs (add & get messages)===
@@ -46,31 +46,31 @@ def add_message(user_id:str, message: str, expire_days: int = 1) -> None:
     """Add a message to Redis sorted set with timestamps"""
     now = time.time()
     key = f"user:{user_id}:messages"
-    r.zadd(key,{message:now})
-    r.expire(key, expire_days * 24 * 3600)
+    redis_client.zadd(key,{message:now})
+    redis_client.expire(key, expire_days * 24 * 3600)
 
 def get_messages(user_id: str, limit: int = 20) -> List[str]:
     """Get last N messages for a user"""
     key = f"user:{user_id}:messages"
-    return r.zrevrange(key, 0, limit - 1)
+    return redis_client.zrevrange(key, 0, limit - 1)
 
 # Add a helpers to save and fetch the last thread_ts per user:
 def set_last_thread(user_id:str, thread_ts: str, expire_days: int = 1)-> None:
     """Stores the last slack thread_timestamp for a user"""
     key = f"user:{user_id}:last_thread"
-    r.setex(key, expire_days * 24 * 3600, thread_ts)
+    redis_client.setex(key, expire_days * 24 * 3600, thread_ts)
 
 def get_last_thread(user_id:str)-> str | None:
     """Retrieve the last slack thread_ts for a user"""
     key = f"user:{user_id}:last_thread"
-    return r.get(key)
+    return redis_client.get(key)
 
 # Caching APIs
 def cache_result(key: str, value: Any, expire_seconds: int = 3600) -> None:
     """Cache any result in redis"""
-    r.set(key, value, ex=expire_seconds)
+    redis_client.set(key, value, ex=expire_seconds)
 
 def get_cached_result(key:str) -> Optional[str]:
     """Return cached value if exists, else None"""
-    return r.get(key)
+    return redis_client.get(key)
 

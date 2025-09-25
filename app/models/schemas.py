@@ -10,6 +10,11 @@ class ToolOutput(BaseModel):
     output: Any
     step: Optional[str] = None 
 
+# Define Schema for Execution Output
+class ExecutorOutput(BaseModel):
+    final_answer: str
+    observations: List[ToolOutput]=[] 
+
 
 
 

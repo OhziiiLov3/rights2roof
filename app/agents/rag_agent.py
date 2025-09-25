@@ -2,13 +2,12 @@ import os
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.prompts import ChatPromptTemplate
 from langsmith import traceable
-from langchain_openai import OpenAIEmbeddings
-from pydantic import BaseModel, Field
 from langchain_core.output_parsers import PydanticOutputParser
 from app.models.schemas import RagAgentResponse
 from app.tools.vector_store_tool import get_context
+from app.services.redis_helpers import cache_result
 
 load_dotenv()
 llm = ChatOpenAI(model="gpt-4o-mini", temperature=0, verbose=True)
@@ -40,6 +39,8 @@ def rag_agent(plan: list, query: str):
     try:
         context = get_context(query).output
         result = rag_chain.invoke({"plan": plan, "query": query, "context": context})
+        if isinstance(result, RagAgentResponse):
+            result = result.model_dump()
         return result
     except Exception as e:
         return {"error": str(e)}

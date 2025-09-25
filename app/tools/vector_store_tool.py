@@ -1,6 +1,5 @@
 import os
 from dotenv import load_dotenv
-import redis
 from langchain_openai import OpenAIEmbeddings
 from langchain_redis import RedisConfig, RedisVectorStore
 from langchain_community.document_loaders import PyPDFLoader

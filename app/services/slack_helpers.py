@@ -1,25 +1,25 @@
 import re 
 import asyncio
 import logging
-
-# from fastmcp import Client
+import json
+from fastmcp import Client
 from slack_sdk import WebClient
-from app.pipelines.pipeline_query import pipeline_query
-from app.services.redis_helpers import add_message, set_last_thread
+from slack_sdk.web.async_client import AsyncWebClient
+from app.services.redis_helpers import add_message, set_last_thread, get_cached_result
 from langsmith import traceable
+from app.tools.chat_tool import chat_tool_fn
+import os 
+from dotenv import load_dotenv
 
 
-
-
+load_dotenv()
 MCP_SERVER_URL = "http://127.0.0.1:5200/mcp"
+SLACK_BOT_TOKEN=os.getenv("SLACK_BOT_TOKEN")
+client = AsyncWebClient(token=SLACK_BOT_TOKEN)
 
 
 
-
-# Allowed Topics for user query santitation
-# first pass to test topics
-
-# ALLOWED_TOPICS = ["rent", "housing","moving","eviction","tenant","lease","landlord","assistance", "housing repairs"]
+# Allowed patterns for user query santitation
 
 ALLOWED_PATTERNS = [
     r"\brent(ing|al)?\b",            # rent, rental, renting
@@ -58,58 +58,83 @@ def sanitize_query(query:str)-> str:
 
 # Helper Function: Post Threaded response
 @traceable
-async def post_slack_thread(client: WebClient,channel_id: str, user_id: str, query_text: str):
+async def post_slack_thread(client: AsyncWebClient,channel_id: str, user_id: str, query_text: str):
     """
     Runs the Planner agent and sends the final answer as a private DM to the user.
     """
     try:
         logging.info(f"[Right2Roof Bot] simulating pipeline for {user_id}:{query_text}")
-        # async with Client(MCP_SERVER_URL) as mcp_client:
-        #     await mcp_client.ping()
-        #     # call the pipline_query_tool(when ready)
-        #     result = await mcp_client.call_tool(
-        #         "pipeline_query_tool",
-        #         {"query": query_text}
-        #     )
+        async with Client(MCP_SERVER_URL) as mcp_client:
+            await mcp_client.ping()
+            # call the pipline_query_tool(when ready)
+            result = await mcp_client.call_tool(
+                "pipeline_tool",
+                {
+                    "query": query_text,
+                    "user_id":user_id
+                }
+            )
 
 
-        # TEMPORARY :runs pipeline query locally for now 
-        result = pipeline_query(query_text, user_id=user_id)
-        logging.info(f"Pipeline result: {result}")
+        logging.info(f"MCP result: {result}")
+
+        # Extract executor response from MCP result
+        try:
+            raw_text = result.content[0].text  # MCP returns JSON string
+            pipeline_response = json.loads(raw_text).get("result", "No result available")
+        except Exception as e:
+            logging.error(f"Failed to parse MCP result: {e}")
+            pipeline_response = str(result)
+
 
        
-
-        # Post a placeholder message first(this creates the thread)
-        placeholder = await asyncio.to_thread(
-            client.chat_postMessage,
+        placeholder = await client.chat_postMessage(
             channel=channel_id,
             text=f"<@{user_id}> Fetching information about your plan..."
         )
 
         # creates placeholder for message to respond in the thread 
         thread_ts = placeholder["ts"]
-        # save thread_ts
         set_last_thread(user_id, thread_ts)
 
         # Post final answer in the thread
-        await asyncio.to_thread(
-            client.chat_postMessage,
+        await client.chat_postMessage(
             channel=channel_id,
             thread_ts=thread_ts,
-            text=f"🏠 Rights2Roof:\n{result}"
+            text=f"🏠 Rights2Roof:\n{pipeline_response}"
         )
 
-        # save bot response in redis 
-        add_message(user_id, f"FINAL_ANSWER: {result}")
+        # Call chat_tool for follow-up Q&A
+        follow_up_query = f"Based on the answer:\n{pipeline_response}\nThe user asks a follow-up: {query_text}"
+        follow_up = await  chat_tool_fn(user_id, follow_up_query)
+        await client.chat_postMessage(
+            channel=channel_id,
+            thread_ts=thread_ts,
+            text=f"💬 Follow-up response:\n{follow_up.output}"
+        )
+
+
+
+        # post follow up - question
+        await client.chat_postMessage(
+        channel=channel_id,
+        thread_ts=thread_ts,
+        text="💬 Want to dive deeper? Ask me a follow-up question here in this thread."
+    )
+
+        # save result in redis 
+        cache_key = f"user:{user_id}:query:{query_text}"
+        full_pipeline_result = get_cached_result(cache_key)
+        add_message(user_id, f"FULL_PIPELINE: {full_pipeline_result}")
  
-        print(f"[Thread] Channel: {channel_id} | User: {user_id} | Answer: {result}")
+        print(f"[Thread] Channel: {channel_id} | User: {user_id} | Answer: {pipeline_response}")
         
     except Exception as e:
         logging.exception(f"[Right2RoofBot] Error in planner agent")
-        await asyncio.to_thread(
-            client.chat_postMessage,
+        await client.chat_postMessage(
             channel=channel_id,
             text=f"<@{user_id}> Error fetching housing info: {str(e)}"
         )
     # logs errors
         add_message(user_id, f"BOT_ERROR: {str(e)}")
+
