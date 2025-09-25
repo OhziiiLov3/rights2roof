@@ -4,9 +4,9 @@ import logging
 import json
 from fastmcp import Client
 from slack_sdk import WebClient
-from app.pipelines.pipeline_query import pipeline_query
 from app.services.redis_helpers import add_message, set_last_thread, get_cached_result
 from langsmith import traceable
+from app.tools.chat_tool import chat_tool_fn
 
 
 
@@ -108,6 +108,26 @@ async def post_slack_thread(client: WebClient,channel_id: str, user_id: str, que
             text=f"🏠 Rights2Roof:\n{pipeline_response}"
         )
 
+        # Call chat_tool for follow-up Q&A
+        follow_up_query = f"Based on the answer:\n{pipeline_response}\nThe user asks a follow-up: {query_text}"
+        follow_up = await  chat_tool_fn(user_id, follow_up_query)
+        await asyncio.to_thread(
+            client.chat_postMessage,
+            channel=channel_id,
+            thread_ts=thread_ts,
+            text=f"💬 Follow-up response:\n{follow_up.output}"
+        )
+
+
+
+        # post follow up - question
+        await asyncio.to_thread(
+        client.chat_postMessage,
+        channel=channel_id,
+        thread_ts=thread_ts,
+        text="💬 Want to dive deeper? Ask me a follow-up question here in this thread."
+    )
+
         # save result in redis 
         cache_key = f"user:{user_id}:query:{query_text}"
         full_pipeline_result = get_cached_result(cache_key)
@@ -124,3 +144,4 @@ async def post_slack_thread(client: WebClient,channel_id: str, user_id: str, que
         )
     # logs errors
         add_message(user_id, f"BOT_ERROR: {str(e)}")
+

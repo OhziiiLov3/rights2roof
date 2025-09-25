@@ -3,7 +3,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_openai import ChatOpenAI
 from app.models.schemas import ExecutionPlan, ToolOutput, ExecutorOutput, RagAgentResponse
-from app.tools import geo_tools, wikipedia_tools, tavily_tools, time_tools, google_news_tool, duckduckgo_tool, bing_rss_tool, legal_scan_tool
+from app.tools import geo_tools, wikipedia_tools, tavily_tools, time_tools, google_news_tool, duckduckgo_tool, bing_rss_tool, legal_scan_tool, chat_tool
 from langsmith import traceable
 from typing import List
 
@@ -41,7 +41,8 @@ TOOLS = {
     "time_tool": time_tools.time_tool,
     "broad_duckduckgo_search": duckduckgo_tool.duckduckgo,
     "bing_rss_tool": bing_rss_tool.bing_rss_tool,
-    "legiscan_tool": legal_scan_tool.legiscan_tool
+    "legiscan_tool": legal_scan_tool.legiscan_tool,
+    "chat_tool": chat_tool.chat_tool,
 }
 
 
@@ -64,6 +65,7 @@ def execute_agent(rag_result: RagAgentResponse, plan_result: ExecutionPlan, quer
         - broad_duckduckgo_search: general purpose web search
         - bing_rss_tool: fetch recent tenant rights & affordable housing updates (California and New York focus)
         - legiscan_tool: search U.S. state legislation and bills (housing, tenant rights, eviction laws, rental policies)
+        - chat_tool: follow-up Q&A agent using conversation history
 
         Instructions:
         - For each step, choose the tool that best matches the intent.
@@ -83,8 +85,9 @@ def execute_agent(rag_result: RagAgentResponse, plan_result: ExecutionPlan, quer
         Examples:
         Step: "Find recent housing news in Brooklyn" -> tool: "gnews_tool", input.query: "recent housing news Brooklyn"
         Step: "Check local rent prices for apartments" -> tool: "tavily_tool", input.query: "rent prices apartments"
+        Step: "Ask user if they want more details or Q&A" -> tool: "chat_tool", input.query: "Follow up with user for more questions"
         """
-        
+
         decision_prompt = ChatPromptTemplate.from_messages([
             ("system",decision_msg),
             ("human", "Step: {step}")
