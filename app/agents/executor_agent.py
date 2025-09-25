@@ -3,7 +3,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_openai import ChatOpenAI
 from app.models.schemas import ExecutionPlan, ToolOutput, ExecutorOutput, RagAgentResponse
-from app.tools import geo_tools, wikipedia_tools, tavily_tools, time_tools, google_news_tool, duckduckgo_tool, bing_rss_tool
+from app.tools import geo_tools, wikipedia_tools, tavily_tools, time_tools, google_news_tool, duckduckgo_tool, bing_rss_tool, legal_scan_tool
 from langsmith import traceable
 from typing import List
 
@@ -40,7 +40,8 @@ TOOLS = {
     "tavily_tool": tavily_tools.tavily_tool,
     "time_tool": time_tools.time_tool,
     "broad_duckduckgo_search": duckduckgo_tool.duckduckgo,
-    "bing_rss_tool": bing_rss_tool.bing_rss_tool
+    "bing_rss_tool": bing_rss_tool.bing_rss_tool,
+    "legiscan_tool": legal_scan_tool.legiscan_tool
 }
 
 
@@ -62,6 +63,7 @@ def execute_agent(rag_result: RagAgentResponse, plan_result: ExecutionPlan, quer
         - time_tool: get current date/time in ISO format
         - broad_duckduckgo_search: general purpose web search
         - bing_rss_tool: fetch recent tenant rights & affordable housing updates (California and New York focus)
+        - legiscan_tool: search U.S. state legislation and bills (housing, tenant rights, eviction laws, rental policies)
 
 
         Instructions:
