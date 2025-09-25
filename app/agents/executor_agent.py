@@ -50,24 +50,39 @@ def execute_agent(rag_result: RagAgentResponse, plan_result: ExecutionPlan, quer
 
     for step in plan_result.plan:
         # Step 1️: LLM chooses tool for this step
+        decision_msg =  """
+        You are an executor LLM that maps execution plan steps to the best tool.
+
+        Available tools and purpose:
+        - geo_lookup: get location information from IP or address
+        - wikipedia_search: fetch factual information from Wikipedia
+        - gnews_tool: fetch recent news or real estate news
+        - tavily_tool: search local housing listings and structured housing info
+        - time_tool: get current date/time in ISO format
+        - broad_duckduckgo_search: general search engine lookup
+
+        Instructions:
+        - For each step, choose the tool that best matches the intent.
+        - Return EXACTLY one JSON object like this:
+
+        {
+        "tool": "<name_of_tool>",
+        "input": {"query": "<text_to_pass_to_tool>"},
+        "output": null
+        }
+
+        - "tool" must be one of the tools above.
+        - "input.query" is the query to pass to the tool.
+        - "output" must be null.
+        - Do not include any extra text or explanations.
+        - Make sure the JSON is valid.
+        Examples:
+        Step: "Find recent housing news in Brooklyn" -> tool: "gnews_tool", input.query: "recent housing news Brooklyn"
+        Step: "Check local rent prices for apartments" -> tool: "tavily_tool", input.query: "rent prices apartments"
+        """
         decision_prompt = ChatPromptTemplate.from_messages([
-            ("system",
-             """You are a lightweight executor LLM. 
-            Choose the best tool for the current step from: geo_lookup, wikipedia_search, gnews_tool, tavily_tool, time_tool.
-            Return a JSON object exactly like this:
-
-            {{
-                "tool": "<name_of_tool>",
-                "input": {{"query": "<text_to_pass_to_tool>"}},
-                "output": null
-            }}
-
-            - "tool" must be one of the listed tools.
-            - "input" contains the query for the tool.
-            - "output" should be null for now.
-            - Do not return any text outside JSON.
-            """),
-                        ("human", "Step: {step}")
+            ("system",decision_msg),
+            ("human", "Step: {step}")
         ])
 
         decision_chain = decision_prompt | executor_llm
@@ -98,8 +113,20 @@ def execute_agent(rag_result: RagAgentResponse, plan_result: ExecutionPlan, quer
     # Step 5️: Synthesize final answer
     synthesis_prompt = ChatPromptTemplate.from_messages([
     ("system", "You are a helpful research assistant. Use the observations to answer clearly and concisely."),
-    ("human", "User query: {query}\nObservations: {observations}")
-])
+    ("human",
+    """
+    User query: {query}
+
+    Observations from tools:
+    {observations}
+
+    Instructions:
+    - Provide a concise answer to the user.
+    - Integrate relevant information from all tools.
+    - Provide links to helpful and relevant resources
+    - Do NOT include raw tool outputs, only the synthesized answer.
+    """)
+    ])
     synthesis_chain = synthesis_prompt | synth_llm
 
     final_answer_msg = synthesis_chain.invoke({
