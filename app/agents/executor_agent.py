@@ -3,7 +3,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_openai import ChatOpenAI
 from app.models.schemas import ExecutionPlan, ToolOutput, ExecutorOutput, RagAgentResponse
-from app.tools import geo_tools, wikipedia_tools, tavily_tools, time_tools, google_news_tool, duckduckgo_tool
+from app.tools import geo_tools, wikipedia_tools, tavily_tools, time_tools, google_news_tool, duckduckgo_tool, bing_rss_tool
 from langsmith import traceable
 from typing import List
 
@@ -39,7 +39,8 @@ TOOLS = {
     "gnews_tool": google_news_tool.real_estate_news_tool,
     "tavily_tool": tavily_tools.tavily_tool,
     "time_tool": time_tools.time_tool,
-    "broad_duckduckgo_search": duckduckgo_tool.duckduckgo
+    "broad_duckduckgo_search": duckduckgo_tool.duckduckgo,
+    "bing_rss_tool": bing_rss_tool.bing_rss_tool
 }
 
 
@@ -54,12 +55,14 @@ def execute_agent(rag_result: RagAgentResponse, plan_result: ExecutionPlan, quer
         You are an executor LLM that maps execution plan steps to the best tool.
 
         Available tools and purpose:
-        - geo_lookup: get location information from IP or address
-        - wikipedia_search: fetch factual information from Wikipedia
-        - gnews_tool: fetch recent news or real estate news
-        - tavily_tool: search local housing listings and structured housing info
+        - geo_lookup: get location info from IP or address
+        - wikipedia_search: fetch factual background from Wikipedia
+        - gnews_tool: get recent housing/real estate news and listings
+        - tavily_tool: search structured/local housing info (listings, policies, assistance)
         - time_tool: get current date/time in ISO format
-        - broad_duckduckgo_search: general search engine lookup
+        - broad_duckduckgo_search: general purpose web search
+        - bing_rss_tool: fetch recent tenant rights & affordable housing updates (California and New York focus)
+
 
         Instructions:
         - For each step, choose the tool that best matches the intent.

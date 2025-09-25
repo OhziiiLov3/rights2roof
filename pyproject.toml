@@ -27,4 +27,5 @@ dependencies = [
     "redis-cli>=1.0.1",
     "langchain-redis>=0.2.3",
     "ddgs>=9.6.0",
+    "feedparser>=6.0.12",
 ]
