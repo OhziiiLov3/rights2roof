@@ -12,8 +12,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && curl -sSL https://install.python-poetry.org | python3 - \
     && rm -rf /var/lib/apt/lists/*
 
-# Ensure Poetry is in the PATH
+# Ensure Poetry is in PATH
 ENV PATH="/root/.local/bin:$PATH"
+
+# Install uv + ngrok globally with pip
+RUN pip install --no-cache-dir uv pyngrok
 
 # Set working directory
 WORKDIR /app
@@ -28,5 +31,9 @@ RUN poetry config virtualenvs.create false \
 # Copy application source code
 COPY app/ app/
 
-# Default command (can be overridden)
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Expose FastAPI port
+EXPOSE 8000
+
+# Start FastAPI + ngrok tunnel automatically
+CMD uvicorn app.main:app --host 0.0.0.0 --port 8000 & \
+    ngrok http 8000 --log=stdout
