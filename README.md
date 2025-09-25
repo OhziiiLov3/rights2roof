@@ -4,7 +4,21 @@
 **Rights2Roof** is an open-source multi-agent Slack bot that helps tenants and landlords understand their housing rights.  
 From eviction notice rules to rental assistance programs, the bot provides **plain-language, jurisdiction-specific guidance** with links to trusted resources.
 
-Housing issues affect millions of people, yet laws and resources are fragmented and confusing. Rights2Roof bridges this gap by combining **retrieval-augmented generation (RAG), planning, and execution agents** to deliver clear answers where they’re needed most — in chat.
+Housing issues affect millions of people, yet laws and resources are fragmented and confusing. Rights2Roof bridges this gap by combining retrieval-augmented generation (RAG), planning, and execution agents to deliver clear answers where they’re needed most — in chat.
+
+---
+
+## ✨ Features
+- **Slack Integration** — Trigger queries with `/R2Rbot`, receive threaded answers.
+- **Planner Agent** — Detects user intent & jurisdiction, generates step-by-step action plans.
+- **RAG Knowledge Base** — Retrieves laws, tenant guides, and housing program docs.
+- **Dynamic Search Tools** — Fetch up-to-date legislation, programs, and news.
+- **Executor Agent** — Synthesizes results into human-friendly, plain-language responses.
+- **Geolocation** — Tailors responses to the user’s city/state.
+- **Data Validation & Logging** — Pydantic schemas ensure structured, reliable outputs.
+-**LangSmith Integration**  — With MCP + LangSmith monitoring, every call is structured and logged.
+- **MCP Orchestration** — Agents communicate via Model Context Protocol (MCP) 
+- **Vector DB & Caching** — Fast retrieval with document embeddings and Redis memory.
 
 ---
 
@@ -34,8 +48,10 @@ Bot: “Here are rental assistance programs in NYC:
 ## 🧩 Architecture
 
 **Workflow:**  
-Slack → Planner Agent → RAG Agent → Executor Agent → Response  
+Slack → Planner Agent → RAG Agent → Executor Agent → Response in Slack thread  
 
 - **Planner Agent:** Takes user intent (e.g., “I need help with rent in NYC”), breaks it into ordered steps, calls tools to get contextual info (Geo, Search, Time, etc.) .  
 - **RAG Agent:** Pulls relevant info from vector DB (tenant guides, laws), falls back to search if DB doesn’t cover query.
 - **Executor Agent:** Synthesizes final output, combines Planner + RAG outputs, returns a plain-language answer with links.
+
+---
