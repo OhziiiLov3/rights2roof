@@ -1,17 +1,20 @@
 #MCP Server goes here
 from fastmcp import FastMCP            
 from typing import Optional, Dict, Any  
-import requests                         
-import os    
+import asyncio
 from app.tools.wikipedia_tools import wikipedia_search
 from app.tools.geo_tools import get_location_from_ip
 from app.tools.google_news_tool import real_estate_news_tool
 from app.tools.tavily_tools import tavily_search
 from app.tools.time_tools import time_tool_fn
-from app.agents.planner_agent import planner_agent
+from app.pipelines.pipeline_query import pipeline_query
+from app.tools.bing_rss_tool import fetch_rss_news
+from app.tools.legal_scan_tool import legiscan_search
+from app.tools.chat_tool import chat_tool_fn
+
 
 rights2roof_server = FastMCP("rights2roof_tools")
-
+# Tools for agents to use 
 @rights2roof_server.tool(description="geolocation tool to find the users location")
 def fetch_location_from_ip(ip:Optional[str] = None) -> Dict[str, Any]:
     return{"result": get_location_from_ip(ip) }
@@ -34,19 +37,29 @@ def time()-> Dict[str, Any]:
 def tavily(query: str)-> Dict[str, Any]:
     return{"result": tavily_search}
 
+rights2roof_server.tool(description="Fetch recent tenant rights & affordable housing updates (California and New York focus).")
+def bing_rss(query: str) -> Dict[str, Any]:
+    return {"result": fetch_rss_news(query)}
 
+@rights2roof_server.tool(description="Search U.S. state legislation and bills (housing, tenant rights, eviction laws).")
+def legiscan(query: str, state: str = "CA") -> Dict[str, Any]:
+    return {"result": legiscan_search(query, state)}
 
-@rights2roof_server.tool(description="Run Planner agent to break query into steps")
-def planner_agent_tool(query: str) -> Dict[str, Any]:
-# simulate final answer
-    plan_result = planner_agent(query)
+@rights2roof_server.tool(description="Follow-up Q&A using conversation history")
+async def chat_tool(query: str, user_id: str) -> Dict[str, Any]:
+    # Run chat_tool_fn in a thread to avoid blocking
+    result = await asyncio.to_thread(chat_tool_fn, user_id, query)
+    return {"result": result.output}
 
-        # Runs planner agent - just to demo for now - this will change 
-    if hasattr(plan_result, "model_dump"):
-        plan_steps = plan_result.model_dump().get("plan", [])
-    else:
-        plan_steps = plan_result.get("plan", [])
-    return {"results":plan_steps}
+# Agent pipeline as tools
+@rights2roof_server.tool(description="Run full Rights2Roof pipeline and return final answer")
+def pipeline_tool(query: str, user_id: str) -> Dict[str, Any]:
+    """
+    Runs the full pipeline (planner + RAG + executor), caches results, 
+    and returns only the executor response.
+    """
+    final_answer = pipeline_query(query, user_id)
+    return {"result": final_answer}
 
 
 def ping() -> str:
