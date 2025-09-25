@@ -8,6 +8,8 @@ from app.tools.geo_tools import get_location_from_ip
 from app.tools.tavily_tools import tavily_search
 from app.tools.time_tools import time_tool_fn
 from app.pipelines.pipeline_query import pipeline_query
+from app.tools.bing_rss_tool import fetch_rss_news
+from app.tools.legal_scan_tool import legiscan_search
 
 rights2roof_server = FastMCP("rights2roof_tools")
 
@@ -26,6 +28,14 @@ def time()-> Dict[str, Any]:
 @rights2roof_server.tool(description="Search Tavily for recent/local housing info and return structured output.")
 def tavily(query: str)-> Dict[str, Any]:
     return{"result": tavily_search}
+
+rights2roof_server.tool(description="Fetch recent tenant rights & affordable housing updates (California and New York focus).")
+def bing_rss(query: str) -> Dict[str, Any]:
+    return {"result": fetch_rss_news(query)}
+
+@rights2roof_server.tool(description="Search U.S. state legislation and bills (housing, tenant rights, eviction laws).")
+def legiscan(query: str, state: str = "CA") -> Dict[str, Any]:
+    return {"result": legiscan_search(query, state)}
 
 
 

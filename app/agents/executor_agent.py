@@ -65,16 +65,15 @@ def execute_agent(rag_result: RagAgentResponse, plan_result: ExecutionPlan, quer
         - bing_rss_tool: fetch recent tenant rights & affordable housing updates (California and New York focus)
         - legiscan_tool: search U.S. state legislation and bills (housing, tenant rights, eviction laws, rental policies)
 
-
         Instructions:
         - For each step, choose the tool that best matches the intent.
         - Return EXACTLY one JSON object like this:
 
-        {
+        {{
         "tool": "<name_of_tool>",
-        "input": {"query": "<text_to_pass_to_tool>"},
+        "input": {{"query": "<text_to_pass_to_tool>"}},
         "output": null
-        }
+        }}
 
         - "tool" must be one of the tools above.
         - "input.query" is the query to pass to the tool.
@@ -85,6 +84,7 @@ def execute_agent(rag_result: RagAgentResponse, plan_result: ExecutionPlan, quer
         Step: "Find recent housing news in Brooklyn" -> tool: "gnews_tool", input.query: "recent housing news Brooklyn"
         Step: "Check local rent prices for apartments" -> tool: "tavily_tool", input.query: "rent prices apartments"
         """
+        
         decision_prompt = ChatPromptTemplate.from_messages([
             ("system",decision_msg),
             ("human", "Step: {step}")
