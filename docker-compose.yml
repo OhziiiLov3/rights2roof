@@ -10,11 +10,9 @@ services:
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-    command: uv run uvicorn app.services.slack_webhook:app
-      --host 0.0.0.0 --port 8000
+    command: ["uv", "run", "uvicorn", "app.services.slack_webhook:app", "--host", "0.0.0.0", "--port", "8000"]
     ports:
-      - "6379:6379"
-      - "8001:8001"
+      - "8000:8000"
     restart: unless-stopped
 
   mcp:
@@ -26,7 +24,7 @@ services:
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-    command: uv run python -m app.server.mcp_server
+    command: ["uv", "run", "python", "-m", "app.server.mcp_server"]
     ports:
       - "5300:5300"
 
