@@ -42,15 +42,14 @@ TOOLS = {
     "broad_duckduckgo_search": duckduckgo_tool.duckduckgo
 }
 
-# -------------------------------
+
 # Step 4: Executor Agent
-# -------------------------------
 @traceable
 def execute_agent(rag_result: RagAgentResponse, plan_result: ExecutionPlan, query: str, verbose=False) -> ExecutorOutput:
     observations: List[ToolOutput] = []
 
     for step in plan_result.plan:
-        # Step 1️⃣: LLM chooses tool for this step
+        # Step 1️: LLM chooses tool for this step
         decision_prompt = ChatPromptTemplate.from_messages([
             ("system",
              """You are a lightweight executor LLM. 
@@ -85,7 +84,7 @@ def execute_agent(rag_result: RagAgentResponse, plan_result: ExecutionPlan, quer
                 print(f"[Warning] Tool {tool_name} not found, skipping step.")
             continue
 
-        # Step 4️⃣: Execute tool
+        # Step 4️: Execute tool
         tool_result = TOOLS[tool_name].invoke({"query": tool_query}, verbose=verbose)
         decision.output = tool_result
         decision.step = step
@@ -96,15 +95,12 @@ def execute_agent(rag_result: RagAgentResponse, plan_result: ExecutionPlan, quer
             print(f"[Executor] Tool: {tool_name}")
             print(f"[Executor] Result: {tool_result}\n")
 
-    # Step 5️⃣: Synthesize final answer
+    # Step 5️: Synthesize final answer
     synthesis_prompt = ChatPromptTemplate.from_messages([
     ("system", "You are a helpful research assistant. Use the observations to answer clearly and concisely."),
     ("human", "User query: {query}\nObservations: {observations}")
 ])
     synthesis_chain = synthesis_prompt | synth_llm
-
-    # ✅ Serialize ToolOutput instances to dicts
-    
 
     final_answer_msg = synthesis_chain.invoke({
         "query": query,
@@ -113,8 +109,8 @@ def execute_agent(rag_result: RagAgentResponse, plan_result: ExecutionPlan, quer
 
     final_answer_text = getattr(final_answer_msg, "content", str(final_answer_msg))
 
-    # ✅ Return serialized observations to avoid Pydantic warnings
+    # Return serialized observations to avoid Pydantic warnings
     return ExecutorOutput(
         final_answer=final_answer_text,
-        observations=observations  # instead of raw ToolOutput objects
+        observations=observations  
 )
