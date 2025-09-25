@@ -3,7 +3,7 @@ import asyncio
 import logging
 import json
 from fastmcp import Client
-from slack_sdk import WebClient
+# from slack_sdk import WebClient
 from slack_sdk.web.async_client import AsyncWebClient
 from app.services.redis_helpers import add_message, set_last_thread, get_cached_result
 from langsmith import traceable
@@ -87,7 +87,17 @@ async def post_slack_thread(client: AsyncWebClient,channel_id: str, user_id: str
             pipeline_response = str(result)
 
 
-       
+        # fallback if pipeline is empty or weak 
+        if not pipeline_response or len(pipeline_response) < 40:  
+            logging.info("Pipeline weak. Falling back to vector store...")
+            async with Client(MCP_SERVER_URL) as mcp_client:
+                vector_result = await mcp_client.call_tool(
+                    "vector_lookup", {"query": query_text}
+                )
+            raw_vector = vector_result.content[0].text
+            fallback_context = json.loads(raw_vector).get("output", [])
+            pipeline_response = "📚 From our tenant rights guide:\n" + "\n".join(fallback_context[:3])
+
         placeholder = await client.chat_postMessage(
             channel=channel_id,
             text=f"<@{user_id}> Fetching information about your plan..."

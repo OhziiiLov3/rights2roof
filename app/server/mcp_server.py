@@ -10,9 +10,12 @@ from app.pipelines.pipeline_query import pipeline_query
 from app.tools.bing_rss_tool import fetch_rss_news
 from app.tools.legal_scan_tool import legiscan_search
 from app.tools.chat_tool import chat_tool_fn
+from app.tools.vector_store_tool import get_context
 
 
 rights2roof_server = FastMCP("rights2roof_tools")
+
+
 # Tools for agents to use 
 @rights2roof_server.tool(description="geolocation tool to find the users location")
 def fetch_location_from_ip(ip:Optional[str] = None) -> Dict[str, Any]:
@@ -38,11 +41,23 @@ def bing_rss(query: str) -> Dict[str, Any]:
 def legiscan(query: str, state: str = "CA") -> Dict[str, Any]:
     return {"result": legiscan_search(query, state)}
 
+@rights2roof_server.tool(description="Retreive legal housing context from PDFs stored in Redis")
+def vector_lookup(query: str) -> Dict[str, Any]:
+    result = get_context(query)  
+    return {
+        "tool": result.tool,
+        "input": result.input,
+        "output": [doc.page_content for doc in result.output],  # simplify to text
+        "step": result.step
+    }
+
 @rights2roof_server.tool(description="Follow-up Q&A using conversation history")
 async def chat_tool(query: str, user_id: str) -> Dict[str, Any]:
     # Run chat_tool_fn in a thread to avoid blocking
     result = await asyncio.to_thread(chat_tool_fn, user_id, query)
     return {"result": result.output}
+
+
 
 # Agent pipeline as tools
 @rights2roof_server.tool(description="Run full Rights2Roof pipeline and return final answer")
