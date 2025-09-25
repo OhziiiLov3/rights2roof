@@ -39,7 +39,7 @@ def pipeline_query(user_query: str, user_id: str) -> str:
     except Exception as e:
         executor_response = f"Executor agent failed: {str(e)}"
 
-    # ✅ Always define cached object
+    # cache the plan, rag and excutor results 
     cached_obj = {
         "plan": plan_result.model_dump() if hasattr(plan_result, "model_dump") else plan_result,
         "rag_response": rag_response,
@@ -53,7 +53,4 @@ def pipeline_query(user_query: str, user_id: str) -> str:
     return executor_response
 
 
-
-# result = pipeline_query("Help me created a plan to find an apartment in Florida", user_id="user123")
-# print(result)
 

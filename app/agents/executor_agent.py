@@ -40,7 +40,6 @@ TOOLS = {
     "tavily_tool": tavily_tools.tavily_tool,
     "time_tool": time_tools.time_tool,
     "broad_duckduckgo_search": duckduckgo_tool.duckduckgo
-
 }
 
 # -------------------------------
