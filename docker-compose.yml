@@ -29,6 +29,15 @@ services:
       - "5300:5300"
 
   redis:
-    image: redis:7
+    image: redis/redis-stack:latest
     ports:
       - "6379:6379"
+      - "8001:8001" 
+  ngrok:
+    image: ngrok/ngrok:latest
+    command: http slack_api:8000 --domain=${NGROK_DOMAIN}
+    environment:
+      - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
+    depends_on:
+      - slack_api
+    restart: unless-stopped
