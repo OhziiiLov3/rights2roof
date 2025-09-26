@@ -1,28 +1,39 @@
 version: "3.9"
 
 services:
+  redis:
+    image: redis/redis-stack:latest
+    ports:
+      - "6379:6379"
+      - "8001:8001"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
   vector_store:
     build: .
     env_file:
       - .env
+    depends_on:
+      - redis
     environment:
-      - REDIS_HOST=${REDIS_HOST}
-      - REDIS_PORT=${REDIS_PORT}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     command: ["uv", "run", "-m", "app.tools.vector_store_tool"]
     restart: "no"
+    
 
   mcp:
     build: .
     env_file:
       - .env
     depends_on:
+      - redis
       - vector_store
     environment:
-      - REDIS_HOST=${REDIS_HOST}
-      - REDIS_PORT=${REDIS_PORT}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - VECTOR_STORE_URL=${VECTOR_STORE_URL}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - VECTOR_STORE_URL=http://vector_store:5400 
     command: ["uv", "run", "-m", "app.server.mcp_server"]
     ports:
       - "5300:5300"
@@ -33,12 +44,12 @@ services:
     env_file:
       - .env
     depends_on:
+      - redis
       - mcp
     environment:
-      - REDIS_HOST=${REDIS_HOST}
-      - REDIS_PORT=${REDIS_PORT}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - MCP_SERVER_URL=${MCP_SERVER_URL}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - MCP_SERVER_URL=http://mcp:5300/mcp
     command: uv run uvicorn app.services.slack_webhook:app --host 0.0.0.0 --port 8000 --reload
     ports:
       - "8000:8000"
@@ -54,3 +65,6 @@ services:
     ports:
       - "4040:4040"
     restart: unless-stopped
+
+volumes:
+  redis_data:
