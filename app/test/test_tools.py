@@ -6,6 +6,7 @@ import os
 from app.tools.legal_scan_tool import legiscan_tool
 
 
+
 # Test tools
 if __name__ == "__main__":
     print("=== Tavily Tool ===")
@@ -30,3 +31,4 @@ if __name__ == "__main__":
     # Test with a query
     result = legiscan_tool.invoke({"query": "tenant rights"})
     print(result.model_dump_json(indent=2))
+    
