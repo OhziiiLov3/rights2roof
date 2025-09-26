@@ -13,7 +13,8 @@ from dotenv import load_dotenv
 
 
 load_dotenv()
-MCP_SERVER_URL = "http://127.0.0.1:5200/mcp"
+# MCP_SERVER_URL = "http://127.0.0.1:5200/mcp" # local dev 
+MCP_SERVER_URL="http://mcp:5300/mcp"
 SLACK_BOT_TOKEN=os.getenv("SLACK_BOT_TOKEN")
 client = AsyncWebClient(token=SLACK_BOT_TOKEN)
 
@@ -64,16 +65,40 @@ async def post_slack_thread(client: AsyncWebClient,channel_id: str, user_id: str
     """
     try:
         logging.info(f"[Right2Roof Bot] simulating pipeline for {user_id}:{query_text}")
-        async with Client(MCP_SERVER_URL) as mcp_client:
-            await mcp_client.ping()
-            # call the pipline_query_tool(when ready)
-            result = await mcp_client.call_tool(
-                "pipeline_tool",
-                {
-                    "query": query_text,
-                    "user_id":user_id
-                }
-            )
+        # async with Client(MCP_SERVER_URL) as mcp_client:
+        #     await mcp_client.ping()
+        #     # call the pipline_query_tool(when ready)
+        #     result = await mcp_client.call_tool(
+        #         "pipeline_tool",
+        #         {
+        #             "query": query_text,
+        #             "user_id":user_id
+        #         }
+        #     )
+        mcp_client = None
+        for attempt in range(5):  # try 10 times
+            try:
+                mcp_client = await Client(MCP_SERVER_URL).__aenter__()
+                await mcp_client.ping()
+                break
+            except Exception as e:
+                wait_time = 2 ** attempt  
+                logging.warning(f"[Right2Roof Bot] MCP connection failed (attempt {attempt+1}). Retrying in {wait_time}s...")
+                await asyncio.sleep(wait_time)
+        else:
+            raise RuntimeError("Unable to connect to MCP server after multiple attempts")
+
+        # call the pipeline tool
+        result = await mcp_client.call_tool(
+            "pipeline_tool",
+            {
+                "query": query_text,
+                "user_id": user_id
+            }
+        )
+
+        # exit MCP client context
+        await mcp_client.__aexit__(None, None, None)
 
 
         logging.info(f"MCP result: {result}")

@@ -74,4 +74,4 @@ vector_store_tool = StructuredTool.from_function(
 )
 
 if __name__ == "__main__":
-    create_vector_store(force=True)
+    create_vector_store()

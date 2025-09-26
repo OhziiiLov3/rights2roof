@@ -75,4 +75,4 @@ def ping() -> str:
 
 
 if __name__ == "__main__":
-    rights2roof_server.run(transport="http", host="0.0.0.0", port=5200)
+    rights2roof_server.run(transport="http", host="0.0.0.0", port=5300, path="/mcp")
