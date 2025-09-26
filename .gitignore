@@ -11,5 +11,7 @@ wheels/
 .env
 
 
+Dockerfile
+
 app/server/app.py
 .DS_store
