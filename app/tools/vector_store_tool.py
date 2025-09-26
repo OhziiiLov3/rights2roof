@@ -17,6 +17,7 @@ embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
 config = RedisConfig(
     index_name=INDEX_NAME,
     redis_client=redis_client,
+    password=os.getenv("REDIS_PASSWORD"),
     embedding=embeddings,
 )
 
