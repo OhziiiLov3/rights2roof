@@ -5,6 +5,8 @@ services:
     build: .
     env_file:
       - .env
+    depends_on:
+      - redis
     environment:
       - REDIS_HOST=${REDIS_HOST}
       - REDIS_PORT=${REDIS_PORT}
