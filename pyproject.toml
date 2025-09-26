@@ -3,18 +3,32 @@ name = "rights2roof"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.14"
 dependencies = [
     "fastapi>=0.116.1",
     "fastmcp>=2.12.3",
-    "langchain>=0.3.27",
+    "langchain[google-genai,openai]>=0.3.27",
     "langchain-community>=0.3.29",
     "langchain-openai>=0.3.33",
     "langchain-tavily>=0.2.11",
+    "langgraph>=0.6.7",
     "pydantic>=2.11.8",
     "python-dotenv>=1.1.1",
     "requests>=2.32.5",
     "slack-sdk>=3.36.0",
     "uvicorn>=0.35.0",
     "wikipedia>=1.4.0",
+    "langsmith>=0.4.28",
+    "python-multipart>=0.0.20",
+    "langchain-mcp-adapters>=0.1.0",
+    "newsapi-python>=0.2.7",
+    "langchain-core>=0.3.27",
+    "redis>=6.4.0",
+    "redis-cli>=1.0.1",
+    "langchain-redis>=0.2.3",
+    "ddgs>=9.6.0",
+    "feedparser>=6.0.12",
+    "qu>=1.2.5",
+    "langchain-google-genai>=2.1.12",
+    "pypdf>=6.1.0",
 ]

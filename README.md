@@ -8,6 +8,7 @@ Housing issues affect millions of people, yet laws and resources are fragmented 
 
 ---
 
+
 ## ✨ Features
 - **Slack Integration** — Trigger queries with `/R2Rbot`, receive threaded answers.
 - **Planner Agent** — Detects user intent & jurisdiction, generates step-by-step action plans.
@@ -53,5 +54,6 @@ Slack → Planner Agent → RAG Agent → Executor Agent → Response in Slack t
 - **Planner Agent:** Takes user intent (e.g., “I need help with rent in NYC”), breaks it into ordered steps, calls tools to get contextual info (Geo, Search, Time, etc.) .  
 - **RAG Agent:** Pulls relevant info from vector DB (tenant guides, laws), falls back to search if DB doesn’t cover query.
 - **Executor Agent:** Synthesizes final output, combines Planner + RAG outputs, returns a plain-language answer with links.
+
 
 ---
