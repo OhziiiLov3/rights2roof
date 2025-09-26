@@ -21,7 +21,6 @@ client = AsyncWebClient(token=SLACK_BOT_TOKEN)
 
 
 # Allowed patterns for user query santitation
-
 ALLOWED_PATTERNS = [
     r"\brent(ing|al)?\b",            # rent, rental, renting
     r"\bhousing\b",                  # housing
@@ -52,8 +51,6 @@ def sanitize_query(query:str)-> str:
     if not any(re.search(pattern, cleaned.lower()) for pattern in ALLOWED_PATTERNS):
         raise ValueError("Query not related to housing/tenant issues.")
     return cleaned
-
-
 
 
 

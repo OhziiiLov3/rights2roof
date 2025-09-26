@@ -24,19 +24,6 @@ config = RedisConfig(
 vector_store = RedisVectorStore(embeddings, config=config)
 retriever = vector_store.as_retriever(search_type="similarity", search_kwargs={"k": 5})
 
-# Function to populate the vector store from PDF files
-# def create_vector_store():
-#     if(not check_index_exists(redis_client, INDEX_NAME)):
-#         for filename in os.listdir(DIRECTORY_PATH):
-#             if filename.endswith(".pdf"):
-#                 file_path = os.path.join(DIRECTORY_PATH, filename)
-#                 loader = PyPDFLoader(file_path)
-#                 pages = loader.load_and_split()
-#                 vector_store.add_documents(documents=pages)
-#     else:
-#         print("Vector store already exists. Skipping creation.")
-
-
 def create_vector_store(force: bool = False):
     """Populate Redis with PDF embeddings."""
     if force or not check_index_exists(redis_client, INDEX_NAME):

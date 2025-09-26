@@ -16,8 +16,6 @@ class ExecutorOutput(BaseModel):
     observations: List[ToolOutput]=[] 
 
 
-
-
 # Defines schema for the Plan
 class ExecutionPlan(BaseModel):
     plan: List[ToolOutput] = Field(

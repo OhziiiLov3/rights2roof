@@ -16,7 +16,7 @@ from app.tools.vector_store_tool import get_context
 rights2roof_server = FastMCP("rights2roof_tools")
 
 
-# Tools for agents to use 
+# == Tools for agents to use ==
 @rights2roof_server.tool(description="geolocation tool to find the users location")
 def fetch_location_from_ip(ip:Optional[str] = None) -> Dict[str, Any]:
     return{"result": get_location_from_ip(ip) }
@@ -59,7 +59,7 @@ async def chat_tool(query: str, user_id: str) -> Dict[str, Any]:
 
 
 
-# Agent pipeline as tools
+# == Agent pipeline as tools ==
 @rights2roof_server.tool(description="Run full Rights2Roof pipeline and return final answer")
 def pipeline_tool(query: str, user_id: str) -> Dict[str, Any]:
     """

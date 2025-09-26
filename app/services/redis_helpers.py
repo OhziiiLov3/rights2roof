@@ -6,9 +6,6 @@ load_dotenv()
 from typing import List , Any, Optional
 
 
-
-
-
 # connect to Redis
 redis_client = redis.Redis(
     host=os.getenv("REDIS_HOST","localhost"),

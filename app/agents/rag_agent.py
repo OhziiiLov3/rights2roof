@@ -12,7 +12,7 @@ from app.services.redis_helpers import cache_result
 load_dotenv()
 llm = ChatOpenAI(model="gpt-4o-mini", temperature=0, verbose=True)
 
-#Base prompt for RAG agent
+
 system_prompt = """
     You are a helpful RAG agent that answers questions about the the laws and regulation regarding the rental housing market in California and New York.
     Your answers should be detailed and include specific references to the relevant laws and regulations.
@@ -33,7 +33,7 @@ prompt_template = ChatPromptTemplate.from_messages([
 rag_agent_response = PydanticOutputParser(pydantic_object=RagAgentResponse)
 rag_chain = prompt_template | llm | rag_agent_response
 
-#llm chain to process the prompt and generate a response
+
 @traceable
 def rag_agent(plan: list, query: str):
     try:
@@ -45,4 +45,3 @@ def rag_agent(plan: list, query: str):
     except Exception as e:
         return {"error": str(e)}
 
-# print(rag_agent(["Step 1: Use the vector store to get relevant context based on the user's query."], "What are the tenant rights in NYC regarding rent increases?"))

@@ -14,7 +14,6 @@ load_dotenv()
 
 
 # Step 1: LLMs
-
 executor_llm = ChatOpenAI(
     model="gpt-4o",
     temperature=0,
@@ -32,7 +31,6 @@ tool_parser = PydanticOutputParser(pydantic_object=ToolOutput)
 
 
 # Step 3: Tool registry
-
 TOOLS = {
     "geo_lookup": geo_tools.geo_tool,
     "wikipedia_search": wikipedia_tools.wikipedia_tool,
@@ -144,7 +142,7 @@ def execute_agent(rag_result: RagAgentResponse, plan_result: ExecutionPlan, quer
 
     final_answer_text = getattr(final_answer_msg, "content", str(final_answer_msg))
 
-    # Return serialized observations to avoid Pydantic warnings
+    # Return serialized observations 
     return ExecutorOutput(
         final_answer=final_answer_text,
         observations=observations  
