@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from slack_sdk import WebClient
 from slack_sdk.web.async_client import AsyncWebClient
 from app.services.slack_helpers import sanitize_query, post_slack_thread 
-from app.services.redis_helpers import check_rate_limit , add_message, get_messages , get_last_thread
+from app.services.redis_helpers import check_rate_limit , add_message, get_messages , get_last_thread, set_last_thread
 from app.tools.chat_tool import chat_tool_fn
 load_dotenv()
 
@@ -110,8 +110,8 @@ async def run_followup(user_id: str, channel_id: str, thread_ts: str, text: str)
 # POST/rights-2-roof-history -> post request and responds with message history to slack
 @app.post("/slack/rights-2-roof-history")
 async def slack_history(user_id: str = Form(...), channel_id: str = Form(...), limit: int = 10):
-    """Fetches recent conversation history with formatted pipeline outputs."""
-    
+    """Fetches recent conversation history with only User Query + R2R Answer."""
+
     history = get_messages(user_id, limit=limit)
     if not history:
         return {
@@ -120,46 +120,42 @@ async def slack_history(user_id: str = Form(...), channel_id: str = Form(...), l
         }
 
     formatted_messages = []
-    for i, msg in enumerate(history):
-        # Try to detect FULL_PIPELINE entries and format
+    for i, msg in enumerate(history, start=1):
         if msg.startswith("FULL_PIPELINE: "):
             try:
                 payload = msg[len("FULL_PIPELINE: "):]
                 pipeline_data = json.loads(payload)
+                user_query = pipeline_data.get("query", "N/A")
                 executor_resp = pipeline_data.get("executor_response", "N/A")
-                plan_resp = pipeline_data.get("plan", "N/A")
-                rag_resp = pipeline_data.get("rag_response", "N/A")
+
                 formatted_messages.append(
-                    f"{i+1}. R2R Answer: {executor_resp}\n   RAG: {rag_resp}\n   Plan: {plan_resp}"
+                    f"{i}. *User:* {user_query}\n  *R2R Answer:* {executor_resp}"
                 )
             except Exception:
-                # fallback if JSON parsing fails
-                formatted_messages.append(f"{i+1}. {msg}")
+                formatted_messages.append(f"{i}. {msg}")
         else:
-            formatted_messages.append(f"{i+1}. {msg}")
+            formatted_messages.append(f"{i}. {msg}")
 
     formatted = "\n\n".join(formatted_messages)
 
-    # Get the last thread_ts for this user 
+    # Get the last thread_ts for this user
     thread_ts = get_last_thread(user_id)
     if thread_ts:
-        await asyncio.to_thread(
-            client.chat_postMessage,
+        await client.chat_postMessage(
             channel=channel_id,
             thread_ts=thread_ts,
-            text=f"Your recent Rights2Roof history:\n{formatted}"
+            text=f"📖 Your recent Rights2Roof history:\n{formatted}"
         )
     else:
-        # fallback -> post as a new message
-        await asyncio.to_thread(
-            client.chat_postMessage,
+        response = await client.chat_postMessage(
             channel=channel_id,
-            text=f"Your recent Rights2Roof history:\n{formatted}"
+            text=f"📖 Your recent Rights2Roof history:\n{formatted}"
         )
+        set_last_thread(user_id, response["ts"])
 
     return {
         "response_type": "ephemeral",
-        "text": "History sent to Channel!"
+        "text": "📖 History sent to Thread!"
     }
 
 

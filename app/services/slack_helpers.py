@@ -140,16 +140,18 @@ async def post_slack_thread(client: AsyncWebClient,channel_id: str, user_id: str
         )
 
         # Call chat_tool for follow-up Q&A
+        # follow_up_query = f"Based on the answer:\n{pipeline_response}\nThe user asks a follow-up: {query_text}"
+        # follow_up = await  chat_tool_fn(user_id, follow_up_query)
+        # await client.chat_postMessage(
+        #     channel=channel_id,
+        #     thread_ts=thread_ts,
+        #     text=f"💬 Follow-up response:\n{follow_up.output}"
+        # )
+
+        # Prepare follow-up context in background but do NOT post it
         follow_up_query = f"Based on the answer:\n{pipeline_response}\nThe user asks a follow-up: {query_text}"
-        follow_up = await  chat_tool_fn(user_id, follow_up_query)
-        await client.chat_postMessage(
-            channel=channel_id,
-            thread_ts=thread_ts,
-            text=f"💬 Follow-up response:\n{follow_up.output}"
-        )
-
-
-
+        asyncio.create_task(chat_tool_fn(user_id, follow_up_query))
+       
         # post follow up - question
         await client.chat_postMessage(
         channel=channel_id,
