@@ -19,10 +19,9 @@ services:
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-    # This will run the vector store script to populate Redis; exits when done
     command: ["uv", "run", "-m", "app.tools.vector_store_tool"]
-    restart: "no" # run once, then exit
-    # Remove ports if you don't need it to serve HTTP externally
+    restart: "no"
+    
 
   mcp:
     build: .
@@ -34,8 +33,7 @@ services:
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - VECTOR_STORE_URL=http://vector_store:5400 # optional, if vector_store exposes HTTP
-    # Run FastMCP server CLI directly
+      - VECTOR_STORE_URL=http://vector_store:5400 
     command: ["uv", "run", "-m", "app.server.mcp_server"]
     ports:
       - "5300:5300"

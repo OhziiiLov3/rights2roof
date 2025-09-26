@@ -34,7 +34,6 @@ async def slack_roof(text: str = Form(...),user_id: str = Form(...),channel_id: 
     try:
         # Step 1: Sanitize
         safe_text = sanitize_query(text)
-
         add_message(user_id, f"USER_QUERY: {safe_text}")
 
         # step 2: Slack to respond immediately 
@@ -138,17 +137,21 @@ async def slack_history(user_id: str = Form(...), channel_id: str = Form(...), l
 
     formatted = "\n\n".join(formatted_messages)
 
+    dm_response = await client.conversations_open(users=user_id)
+    dm_channel_id = dm_response["channel"]["id"]
+
+
     # Get the last thread_ts for this user
     thread_ts = get_last_thread(user_id)
     if thread_ts:
         await client.chat_postMessage(
-            channel=channel_id,
+            channel=dm_channel_id,
             thread_ts=thread_ts,
             text=f"📖 Your recent Rights2Roof history:\n{formatted}"
         )
     else:
         response = await client.chat_postMessage(
-            channel=channel_id,
+            channel=dm_channel_id,
             text=f"📖 Your recent Rights2Roof history:\n{formatted}"
         )
         set_last_thread(user_id, response["ts"])

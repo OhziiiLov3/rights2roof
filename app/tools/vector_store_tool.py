@@ -17,7 +17,7 @@ embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
 config = RedisConfig(
     index_name=INDEX_NAME,
     redis_client=redis_client,
-    embedding=embeddings
+    embedding=embeddings,
 )
 
 #Create vector store and the retreiver
@@ -74,4 +74,4 @@ vector_store_tool = StructuredTool.from_function(
 )
 
 if __name__ == "__main__":
-    create_vector_store()
+    create_vector_store(force=True)

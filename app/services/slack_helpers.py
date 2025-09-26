@@ -65,16 +65,6 @@ async def post_slack_thread(client: AsyncWebClient,channel_id: str, user_id: str
     """
     try:
         logging.info(f"[Right2Roof Bot] simulating pipeline for {user_id}:{query_text}")
-        # async with Client(MCP_SERVER_URL) as mcp_client:
-        #     await mcp_client.ping()
-        #     # call the pipline_query_tool(when ready)
-        #     result = await mcp_client.call_tool(
-        #         "pipeline_tool",
-        #         {
-        #             "query": query_text,
-        #             "user_id":user_id
-        #         }
-        #     )
         mcp_client = None
         for attempt in range(5):  # try 10 times
             try:
@@ -100,7 +90,6 @@ async def post_slack_thread(client: AsyncWebClient,channel_id: str, user_id: str
         # exit MCP client context
         await mcp_client.__aexit__(None, None, None)
 
-
         logging.info(f"MCP result: {result}")
 
         # Extract executor response from MCP result
@@ -123,8 +112,12 @@ async def post_slack_thread(client: AsyncWebClient,channel_id: str, user_id: str
             fallback_context = json.loads(raw_vector).get("output", [])
             pipeline_response = "📚 From our tenant rights guide:\n" + "\n".join(fallback_context[:3])
 
+        dm_response = await client.conversations_open(users=user_id)
+        dm_channel_id = dm_response["channel"]["id"]
+
+
         placeholder = await client.chat_postMessage(
-            channel=channel_id,
+            channel=dm_channel_id,
             text=f"<@{user_id}> Fetching information about your plan..."
         )
 
@@ -134,34 +127,27 @@ async def post_slack_thread(client: AsyncWebClient,channel_id: str, user_id: str
 
         # Post final answer in the thread
         await client.chat_postMessage(
-            channel=channel_id,
+            channel=dm_channel_id,
             thread_ts=thread_ts,
             text=f"🏠 Rights2Roof:\n{pipeline_response}"
         )
 
         # Call chat_tool for follow-up Q&A
-        # follow_up_query = f"Based on the answer:\n{pipeline_response}\nThe user asks a follow-up: {query_text}"
-        # follow_up = await  chat_tool_fn(user_id, follow_up_query)
-        # await client.chat_postMessage(
-        #     channel=channel_id,
-        #     thread_ts=thread_ts,
-        #     text=f"💬 Follow-up response:\n{follow_up.output}"
-        # )
-
         # Prepare follow-up context in background but do NOT post it
         follow_up_query = f"Based on the answer:\n{pipeline_response}\nThe user asks a follow-up: {query_text}"
         asyncio.create_task(chat_tool_fn(user_id, follow_up_query))
        
         # post follow up - question
         await client.chat_postMessage(
-        channel=channel_id,
+        channel=dm_channel_id,
+        user=user_id,
         thread_ts=thread_ts,
         text="💬 Want to dive deeper? Ask me a follow-up question here in this thread."
     )
 
         # save result in redis 
         cache_key = f"user:{user_id}:query:{query_text}"
-        full_pipeline_result = get_cached_result(cache_key)
+        full_pipeline_result = get_cached_result(cache_key) or ""
         add_message(user_id, f"FULL_PIPELINE: {full_pipeline_result}")
  
         print(f"[Thread] Channel: {channel_id} | User: {user_id} | Answer: {pipeline_response}")
@@ -170,6 +156,7 @@ async def post_slack_thread(client: AsyncWebClient,channel_id: str, user_id: str
         logging.exception(f"[Right2RoofBot] Error in planner agent")
         await client.chat_postMessage(
             channel=channel_id,
+            user=user_id,
             text=f"<@{user_id}> Error fetching housing info: {str(e)}"
         )
     # logs errors
