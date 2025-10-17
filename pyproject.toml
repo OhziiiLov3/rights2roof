@@ -31,4 +31,5 @@ dependencies = [
     "qu>=1.2.5",
     "langchain-google-genai>=2.1.12",
     "pypdf>=6.1.0",
+    "pytest>=8.4.2",
 ]

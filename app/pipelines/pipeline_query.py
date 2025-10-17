@@ -1,13 +1,29 @@
 # file to run pipeline -> export pipeline_query fn to the mcp_server to run as a tool 
 import logging
 import json
-from typing import Dict, Any
 from langsmith import traceable
+from langgraph.graph import StateGraph, END
+from app.pipelines.pipeline_state import PipelineState
 from app.services.redis_helpers import get_cached_result, cache_result
 from app.agents.planner_agent import planner_agent
 from app.agents.rag_agent import rag_agent
 from app.agents.executor_agent import execute_agent
 from app.models.schemas import ExecutorOutput
+
+
+# build pipeline graph 
+def build_pipeline_graph():
+    graph = StateGraph(PipelineState)
+    graph.add_node("planner", planner_agent)
+    graph.add_node("rag", rag_agent)
+    graph.add_node("executor", execute_agent)
+
+    graph.add_edge("planner","rag")
+    graph.add_edge("rag","executor")
+    graph.add_edge("executor",END)
+
+    return graph
+
 
 
 @traceable
