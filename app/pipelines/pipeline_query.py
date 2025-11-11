@@ -11,18 +11,7 @@ from app.agents.executor_agent import execute_agent
 from app.models.schemas import ExecutorOutput
 
 
-# build pipeline graph 
-def build_pipeline_graph():
-    graph = StateGraph(PipelineState)
-    graph.add_node("planner", planner_agent)
-    graph.add_node("rag", rag_agent)
-    graph.add_node("executor", execute_agent)
 
-    graph.add_edge("planner","rag")
-    graph.add_edge("rag","executor")
-    graph.add_edge("executor",END)
-
-    return graph
 
 
 
