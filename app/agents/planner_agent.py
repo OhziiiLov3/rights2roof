@@ -84,22 +84,3 @@ def execute_tool(step: ToolOutput) -> ToolOutput:
     return step
 
 
-
-# Step 6: Create Planner Agent with Error Loggins 
-# @traceable
-# def planner_agent(query: str):
-#     try:
-#         # 1 Generate plan with tool references
-#         plan_result: ExecutionPlan = planner_chain.invoke({"query": query})
-        
-#         # 2️ Execute each tool to enrich steps
-#         enriched_plan = []
-#         for step in plan_result.plan:
-#             enriched_step = execute_tool(step)
-#             enriched_plan.append(enriched_step)
-#         return ExecutionPlan(plan=enriched_plan)
-#     except Exception as e:
-#         return ExecutionPlan(plan=[ToolOutput(tool="error", input=query, output=str(e))])
-
-
-

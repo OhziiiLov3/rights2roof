@@ -1,5 +1,5 @@
 import pytest
-from app.pipelines.pipeline_state import PipelineState
+from app.models.pipeline_state import PipelineState
 from app.models.schemas import ExecutionPlan, ToolOutput
 import logging
 

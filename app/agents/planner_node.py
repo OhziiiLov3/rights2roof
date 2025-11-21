@@ -1,7 +1,6 @@
 from langsmith import traceable
 from app.agents.planner_agent import planner_chain, execute_tool
 from app.models.schemas import ExecutionPlan, ToolOutput
-from app.pipelines.pipeline_state import PipelineState
 import logging
 
 

@@ -34,14 +34,14 @@ rag_agent_response = PydanticOutputParser(pydantic_object=RagAgentResponse)
 rag_chain = prompt_template | llm | rag_agent_response
 
 
-@traceable
-def rag_agent(plan: list, query: str):
-    try:
-        context = get_context(query).output
-        result = rag_chain.invoke({"plan": plan, "query": query, "context": context})
-        if isinstance(result, RagAgentResponse):
-            result = result.model_dump()
-        return result
-    except Exception as e:
-        return {"error": str(e)}
+# @traceable
+# def rag_agent(plan: list, query: str):
+#     try:
+#         context = get_context(query).output
+#         result = rag_chain.invoke({"plan": plan, "query": query, "context": context})
+#         if isinstance(result, RagAgentResponse):
+#             result = result.model_dump()
+#         return result
+#     except Exception as e:
+#         return {"error": str(e)}
 

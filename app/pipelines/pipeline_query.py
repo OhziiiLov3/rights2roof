@@ -3,7 +3,7 @@ import logging
 import json
 from langsmith import traceable
 from langgraph.graph import StateGraph, END
-from app.pipelines.pipeline_state import PipelineState
+from app.models.pipeline_state import PipelineState
 from app.services.redis_helpers import get_cached_result, cache_result
 from app.agents.planner_agent import planner_agent
 from app.agents.rag_agent import rag_agent
