@@ -1,6 +1,6 @@
 # Pydantic Schemas go here
 from pydantic import BaseModel, Field
-from typing import List, Any, Optional
+from typing import List, Any, Optional, Union
 
 
 # Define Schema for ToolOutput (execution agent will use this when ready)
@@ -8,7 +8,7 @@ class ToolOutput(BaseModel):
     tool: str
     input: Any
     output: Any
-    step: Optional[str] = None 
+    step: Optional[Union[str, int]] = None
 
 # Define Schema for Execution Output
 class ExecutorOutput(BaseModel):

@@ -72,32 +72,34 @@ planner_chain = planner_prompt.partial(format_instructions=plan_parser.get_forma
 # Helper: Execute a single tool and attach output
 def execute_tool(step: ToolOutput) -> ToolOutput:
     tool_func = TOOL_MAP.get(step.tool)
-    if not tool_func:
-        step.output = f"Tool {step.tool} not found"
-        return step
     try:
-        # Execute tool (can adapt for async if needed)
-        step.output = tool_func.invoke(step.input)
+        # Call the tool
+        result = tool_func.invoke(step.input)
+        # Keep original step identifier
+        step.output = result
+        if step.step is None and hasattr(result, "step"):
+            step.step = result.step  # propagate inner step if missing
     except Exception as e:
         step.output = f"Error executing tool: {str(e)}"
     return step
 
 
+
 # Step 6: Create Planner Agent with Error Loggins 
-@traceable
-def planner_agent(query: str):
-    try:
-        # 1 Generate plan with tool references
-        plan_result: ExecutionPlan = planner_chain.invoke({"query": query})
+# @traceable
+# def planner_agent(query: str):
+#     try:
+#         # 1 Generate plan with tool references
+#         plan_result: ExecutionPlan = planner_chain.invoke({"query": query})
         
-        # 2️ Execute each tool to enrich steps
-        enriched_plan = []
-        for step in plan_result.plan:
-            enriched_step = execute_tool(step)
-            enriched_plan.append(enriched_step)
-        return ExecutionPlan(plan=enriched_plan)
-    except Exception as e:
-        return ExecutionPlan(plan=[ToolOutput(tool="error", input=query, output=str(e))])
+#         # 2️ Execute each tool to enrich steps
+#         enriched_plan = []
+#         for step in plan_result.plan:
+#             enriched_step = execute_tool(step)
+#             enriched_plan.append(enriched_step)
+#         return ExecutionPlan(plan=enriched_plan)
+#     except Exception as e:
+#         return ExecutionPlan(plan=[ToolOutput(tool="error", input=query, output=str(e))])
 
 
 
