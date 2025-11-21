@@ -115,7 +115,7 @@ async def post_slack_thread(client: AsyncWebClient,channel_id: str, user_id: str
 
         placeholder = await client.chat_postMessage(
             channel=dm_channel_id,
-            text=f"<@{user_id}> Fetching information about your plan..."
+            text=f"<@{user_id}> Fetching information about: {query_text}..."
         )
 
         # creates placeholder for message to respond in the thread 

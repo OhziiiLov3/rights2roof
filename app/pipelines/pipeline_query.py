@@ -1,61 +1,64 @@
-# file to run pipeline -> export pipeline_query fn to the mcp_server to run as a tool 
 import logging
 import json
 from langsmith import traceable
-from langgraph.graph import StateGraph, END
-from app.models.pipeline_state import PipelineState
 from app.services.redis_helpers import get_cached_result, cache_result
-from app.agents.planner_agent import planner_agent
-from app.agents.rag_agent import rag_agent
-from app.agents.executor_agent import execute_agent
-from app.models.schemas import ExecutorOutput
+from app.agents.planner_node import planner_node
+from app.agents.rag_node import rag_node
+from app.agents.executor_node import executor_node
+from app.services.serializers import (
+    serialize_tool_output,
+    serialize_execution_plan,
+    ensure_execution_plan
+)
+from app.models.schemas import ExecutionPlan
 
-
-
-
-
-
-@traceable
+@traceable(run_type="chain", name="Pipeline Execution")
 def pipeline_query(user_query: str, user_id: str) -> str:
     """
-    Run the full pipeline and return only the executor final answer for Slack.
-    Full pipeline info is cached for history.
+    Run the full Rights2Roof pipeline and return the executor final answer.
+    Handles dicts vs Pydantic objects, integrates serializer for JSON safety.
     """
     logging.info(f"[Pipeline] Running Planner for query: {user_query}")
 
-    # Step 1: Check cache
+    # 1. Check cache
     cache_key = f"user:{user_id}:query:{user_query}"
     cached = get_cached_result(cache_key)
     if cached:
         cached_data = json.loads(cached)
+        logging.info("[Pipeline] Returning cached result")
         return cached_data.get("executor_response", "No cached answer")
 
-    # Step 2: Planner
-    plan_result = planner_agent(user_query)
+    # 2. Run nodes
 
-    # Step 3: RAG
-    rag_result = rag_agent(plan_result, user_query)
-    rag_response = rag_result.get("response", "No response available")
+    # Planner node -> returns dict
+    plan_result = planner_node({"query": user_query, "user_id": user_id, "history": []})
+    plan_obj: ExecutionPlan = ensure_execution_plan(plan_result)
 
-    # Step 4: Executor
-    try:
-        executor_result = execute_agent(rag_result, plan_result, user_query)
-        executor_response = getattr(executor_result, "final_answer", str(executor_result))
-    except Exception as e:
-        executor_response = f"Executor agent failed: {str(e)}"
+    # RAG node -> receives JSON-safe plan
+    rag_result = rag_node({
+        "query": user_query,
+        "plan": serialize_execution_plan(plan_obj)["plan"],
+        "history": [],
+        "user_id": user_id
+    })
 
-    # cache the plan, rag and excutor results 
-    cached_obj = {
-        "plan": plan_result.model_dump() if hasattr(plan_result, "model_dump") else plan_result,
-        "rag_response": rag_response,
-        "executor_response": executor_response
+    # Executor node -> receives proper ExecutionPlan object
+    executor_result = executor_node({
+        "query": user_query,
+        "plan": plan_obj,
+        "rag_response": rag_result.get("rag_response"),
+        "user_id": user_id
+    })
+
+    executor_response = executor_result.get("executor_response", "No response from executor")
+
+    # 3. Serialize and cache full pipeline result
+    cache_obj = {
+        "plan": serialize_execution_plan(plan_obj),
+        "rag_response": rag_result.get("rag_response"),
+        "executor_response": executor_response,
+        "executor_observations": serialize_tool_output(executor_result.get("executor_observations"))
     }
+    cache_result(cache_key, json.dumps(cache_obj))
 
-    # Cache the full pipeline
-    cache_result(cache_key, json.dumps(cached_obj))
-
-    # Return just the executor response
     return executor_response
-
-
-
