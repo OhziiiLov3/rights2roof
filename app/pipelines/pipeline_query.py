@@ -11,34 +11,33 @@ from app.services.serializers import (
     ensure_execution_plan
 )
 from app.models.schemas import ExecutionPlan
+from app.models.pipeline_state import PipelineState
 
 @traceable(run_type="chain", name="Pipeline Execution")
 def pipeline_query(user_query: str, user_id: str) -> str:
     """
-    Run the full Rights2Roof pipeline and return the executor final answer.
-    Handles dicts vs Pydantic objects, integrates serializer for JSON safety.
+    Run the Rights2Roof pipeline with multi-turn support.
+    Maintains history between queries for the same user.
     """
-    logging.info(f"[Pipeline] Running Planner for query: {user_query}")
+    logging.info(f"[Pipeline] Running query: {user_query}")
 
-    # 1. Check cache
-    cache_key = f"user:{user_id}:query:{user_query}"
+    # Cache key for multi-turn history
+    cache_key = f"user:{user_id}:history"
     cached = get_cached_result(cache_key)
+    history = []
     if cached:
-        cached_data = json.loads(cached)
-        logging.info("[Pipeline] Returning cached result")
-        return cached_data.get("executor_response", "No cached answer")
-
-    # 2. Run nodes
+        history = json.loads(cached).get("history", [])
+        logging.info(f"[Pipeline] Loaded {len(history)} previous steps from history")
 
     # Planner node -> returns dict
-    plan_result = planner_node({"query": user_query, "user_id": user_id, "history": []})
+    plan_result = planner_node({"query": user_query, "user_id": user_id, "history": history})
     plan_obj: ExecutionPlan = ensure_execution_plan(plan_result)
 
     # RAG node -> receives JSON-safe plan
     rag_result = rag_node({
         "query": user_query,
         "plan": serialize_execution_plan(plan_obj)["plan"],
-        "history": [],
+        "history": history,
         "user_id": user_id
     })
 
@@ -47,18 +46,23 @@ def pipeline_query(user_query: str, user_id: str) -> str:
         "query": user_query,
         "plan": plan_obj,
         "rag_response": rag_result.get("rag_response"),
+        "history": history,
         "user_id": user_id
     })
 
     executor_response = executor_result.get("executor_response", "No response from executor")
 
-    # 3. Serialize and cache full pipeline result
-    cache_obj = {
+    # Update history with the new turn
+    history.append({
+        "query": user_query,
         "plan": serialize_execution_plan(plan_obj),
         "rag_response": rag_result.get("rag_response"),
         "executor_response": executor_response,
         "executor_observations": serialize_tool_output(executor_result.get("executor_observations"))
-    }
-    cache_result(cache_key, json.dumps(cache_obj))
+    })
+
+    # Cache updated history
+    cache_result(cache_key, json.dumps({"history": history}))
 
     return executor_response
+

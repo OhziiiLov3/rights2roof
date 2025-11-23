@@ -1,32 +1,37 @@
-import pytest
-from app.models.pipeline_state import PipelineState
-from app.models.schemas import ExecutionPlan, ToolOutput
-import logging
+# test_pipeline_graph.py
+from app.pipelines.pipeline_graph import build_pipeline_graph
+from langchain_core.runnables import RunnableConfig
+import pprint
 
-logging.basicConfig(level=logging.INFO)
+def main():
+    graph, checkpointer = build_pipeline_graph()
 
-def test_pipeline_state_init():
-    logging.info("Initializing PipelineState...")
+    # Initial state
+    state = {
+        "user_id": "test_user",
+        "query": "Find affordable housing in SF",
+        "plan": None,
+        "history": []
+    }
 
-    state = PipelineState()
-    state.user_id = "user123"
-    state.query = "Find affordable housing in SF"
+    # Thread ID for LangGraph persistence
+    thread_id = "pipeline_thread:test_user"
+    config: RunnableConfig = {"configurable": {"thread_id": thread_id}}
 
-    # Sample step and plan
-    sample_step = ToolOutput(tool="wikipedia_search", input="housing rights", output="Sample output")
-    sample_plan = ExecutionPlan(plan=[sample_step])
+    # Invoke graph
+    result = graph.invoke(state, config=config)
+    print("Graph invoke returned:", result)
 
-    # Print / log the sample plan
-    print("Sample plan (raw object):", sample_plan)
-    logging.info("Sample plan as dict: %s", sample_plan.model_dump())
-    logging.info("Sample plan as JSON:\n%s", sample_plan.model_dump_json(indent=2))
+    # Get latest state snapshot
+    state_snapshot = graph.get_state(config=config)
+    print("\nCurrent checkpoint: ")
+    pprint.pprint(state_snapshot.values)
 
-    state.plan = sample_plan    
-    state.history.append(sample_plan)
+    # Get full state history
+    history = graph.get_state_history(config=config)
+    print("\nState history: ")
+    for idx, snap in enumerate(history):
+        print(f"Checkpoint {idx}: values={snap.values}, metadata={snap.metadata}")
 
-    logging.info(f"Updated state.plan: {state.plan.model_dump()}")
-    logging.info(f"Updated state.history length: {len(state.history)}")
-
-    assert state.plan == sample_plan
-    assert len(state.history) == 1
-    assert state.history[0].plan[0].tool == "wikipedia_search"
+if __name__ == "__main__":
+    main()
