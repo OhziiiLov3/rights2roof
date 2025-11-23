@@ -49,7 +49,12 @@ TOOLS = {
 def execute_agent(rag_result: RagAgentResponse, plan_result: ExecutionPlan, query: str, verbose=False) -> ExecutorOutput:
     observations: List[ToolOutput] = []
 
-    for step in plan_result.plan:
+    if isinstance(plan_result, dict):
+        plan_result = ExecutionPlan(**plan_result)
+
+    for idx, step in enumerate(plan_result.plan):
+        # Ensure step id is JSON-safe
+        step_id = getattr(step, "step", str(idx))
         # Step 1️: LLM chooses tool for this step
         decision_msg =  """
         You are an executor LLM that maps execution plan steps to the best tool.
@@ -76,8 +81,6 @@ def execute_agent(rag_result: RagAgentResponse, plan_result: ExecutionPlan, quer
         }}
 
         - "tool" must be one of the tools above.
-        - "input.query" is the query to pass to the tool.
-        - "output" must be null.
         - Do not include any extra text or explanations.
         - Make sure the JSON is valid.
         Examples:
@@ -92,31 +95,44 @@ def execute_agent(rag_result: RagAgentResponse, plan_result: ExecutionPlan, quer
         ])
 
         decision_chain = decision_prompt | executor_llm
-        decision_msg = decision_chain.invoke({"step": step})
+        decision_content = getattr(decision_chain.invoke({"step": step}), "content", None)
+        decision_content = decision_content or str(step)
 
-        # Step 2️: Parse LLM decision
-        decision: ToolOutput = tool_parser.parse(getattr(decision_msg, "content", str(decision_msg)))
+        # Parse LLM decision
+        decision: ToolOutput = tool_parser.parse(decision_content)
         tool_name = decision.tool
         tool_query = decision.input.get("query") or query
 
-        # Step 3️: Guard – ensure tool exists
+        # Step 3: Guard
         if tool_name not in TOOLS:
             if verbose:
                 print(f"[Warning] Tool {tool_name} not found, skipping step.")
             continue
 
-        # Step 4️: Execute tool
-        tool_result = TOOLS[tool_name].invoke({"query": tool_query}, verbose=verbose)
+        # Step 4: Safe tool execution
+        tool_instance = TOOLS[tool_name]
+        tool_result = None
+        
+        if hasattr(tool_instance, "invoke"):
+            tool_result = tool_instance.invoke({"query": tool_query}, verbose=verbose)
+        elif hasattr(tool_instance, "run"):
+            tool_result = tool_instance.run(tool_query)
+
+        # Ensure output is JSON-safe
+        if hasattr(tool_result, "model_dump"):
+            tool_result = tool_result.model_dump()
+        elif hasattr(tool_result, "dict"):
+            tool_result = tool_result.dict()
+
         decision.output = tool_result
-        decision.step = step
+        decision.step = step_id
         observations.append(decision)
 
         if verbose:
-            print(f"[Executor] Step: {step}")
+            print(f"[Executor] Step: {step_id}")
             print(f"[Executor] Tool: {tool_name}")
             print(f"[Executor] Result: {tool_result}\n")
 
-    # Step 5️: Synthesize final answer
     synthesis_prompt = ChatPromptTemplate.from_messages([
     ("system", "You are a helpful research assistant. Use the observations to answer clearly and concisely."),
     ("human",

@@ -11,6 +11,8 @@ from app.tools.bing_rss_tool import fetch_rss_news
 from app.tools.legal_scan_tool import legiscan_search
 from app.tools.chat_tool import chat_tool_fn
 from app.tools.vector_store_tool import get_context
+from langsmith import traceable
+from app.services.serializers import serialize_tool_output
 
 
 rights2roof_server = FastMCP("rights2roof_tools")
@@ -31,9 +33,9 @@ def time()-> Dict[str, Any]:
 
 @rights2roof_server.tool(description="Search Tavily for recent/local housing info and return structured output.")
 def tavily(query: str)-> Dict[str, Any]:
-    return{"result": tavily_search}
+    return{"result": tavily_search(query)}
 
-rights2roof_server.tool(description="Fetch recent tenant rights & affordable housing updates (California and New York focus).")
+@rights2roof_server.tool(description="Fetch recent tenant rights & affordable housing updates (California and New York focus).")
 def bing_rss(query: str) -> Dict[str, Any]:
     return {"result": fetch_rss_news(query)}
 
@@ -61,10 +63,9 @@ async def chat_tool(query: str, user_id: str) -> Dict[str, Any]:
 
 # == Agent pipeline as tools ==
 @rights2roof_server.tool(description="Run full Rights2Roof pipeline and return final answer")
-def pipeline_tool(query: str, user_id: str) -> Dict[str, Any]:
+def pipeline_tool(query: str, user_id: str) -> dict:
     """
-    Runs the full pipeline (planner + RAG + executor), caches results, 
-    and returns only the executor response.
+    Run full pipeline and return JSON-safe response for Slack and logging.
     """
     final_answer = pipeline_query(query, user_id)
     return {"result": final_answer}
