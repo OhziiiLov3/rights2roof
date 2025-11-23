@@ -8,9 +8,9 @@ from typing import List , Any, Optional
 
 # connect to Redis
 redis_client = redis.Redis(
-    host=os.getenv("REDIS_HOST","localhost"),
+    host=os.getenv("REDIS_HOST"),
     port=int(os.getenv("REDIS_PORT", 6379)),
-    db=0,
+    password=os.environ.get("REDIS_PASSWORD"),
     decode_responses=True
 )
 

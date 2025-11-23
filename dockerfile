@@ -21,7 +21,9 @@ RUN uv sync --frozen --no-cache || pip install fastapi slack-sdk redis aiohttp
 
 # Copy application code
 COPY app/ app/
+# Make sure your PDFs are included
+COPY app/resources/files app/resources/files
 COPY . .
 
-# Default command (overridden by docker-compose per service)
+# Default command; overridden in docker-compose for specific services
 CMD ["uvicorn", "app.services.slack_webhook:app", "--host", "0.0.0.0", "--port", "8000"]
