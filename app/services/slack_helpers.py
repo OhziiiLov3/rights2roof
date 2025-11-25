@@ -5,7 +5,7 @@ import json
 from fastmcp import Client
 # from slack_sdk import WebClient
 from slack_sdk.web.async_client import AsyncWebClient
-from app.services.redis_helpers import add_message, set_last_thread, get_cached_result
+from app.services.redis_helpers import add_message, set_last_thread, get_cached_result, get_user_location, set_user_location
 from langsmith import traceable
 from app.tools.chat_tool import chat_tool_fn
 import os 
@@ -75,13 +75,16 @@ async def post_slack_thread(client: AsyncWebClient,channel_id: str, user_id: str
                 await asyncio.sleep(wait_time)
         else:
             raise RuntimeError("Unable to connect to MCP server after multiple attempts")
-
+        
+        
+        location = get_user_location(user_id)
         # call the pipeline tool
         result = await mcp_client.call_tool(
             "pipeline_tool",
             {
                 "query": query_text,
-                "user_id": user_id
+                "user_id": user_id,
+                "location": location
             }
         )
 

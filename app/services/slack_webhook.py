@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from slack_sdk import WebClient
 from slack_sdk.web.async_client import AsyncWebClient
 from app.services.slack_helpers import sanitize_query, post_slack_thread 
-from app.services.redis_helpers import check_rate_limit , add_message, get_messages , get_last_thread, set_last_thread
+from app.services.redis_helpers import check_rate_limit , add_message, get_messages , get_last_thread, set_last_thread, get_user_location, set_user_location
 from app.tools.chat_tool import chat_tool_fn
 load_dotenv()
 
@@ -35,6 +35,13 @@ async def slack_roof(text: str = Form(...),user_id: str = Form(...),channel_id: 
         # Step 1: Sanitize
         safe_text = sanitize_query(text)
         add_message(user_id, f"USER_QUERY: {safe_text}")
+
+        location = get_user_location(user_id)
+        if not location:
+            return {
+        "response_type": "ephemeral",
+        "text": "🏠 To give you accurate tenant-rights info, what *state* are you in? (e.g., CA, NY, TX)"
+        }
 
         # step 2: Slack to respond immediately 
         ephemeral_response = {
@@ -64,18 +71,40 @@ async def slack_events(req: Request):
         return {"challenge": payload["challenge"]}
 
     event = payload.get("event", {})
-
-    # Ignore bot messages
-    if event.get("bot_id"):
-        return {"ok": True}
-
     text = event.get("text")
     user_id = event.get("user")
     channel_id = event.get("channel")
     thread_ts = event.get("thread_ts") or event.get("ts")
 
-    if not text or not user_id:
+
+    # Ignore bot messages
+    if event.get("bot_id"):
         return {"ok": True}
+    
+    user_location = get_user_location(user_id)
+
+    if not user_location:
+        cleaned = text.strip().upper()
+
+        # validate things like "CA", "NY", "TX"
+        if len(cleaned) in (2, 3):
+            set_user_location(user_id, cleaned)
+
+            await client.chat_postMessage(
+                channel=channel_id,
+                thread_ts=thread_ts,
+                text=f"👍 Got it! I'll use **{cleaned}** for all tenant-rights answers."
+            )
+            return {"ok": True}
+
+        # Failed validation → ask again
+        await client.chat_postMessage(
+            channel=channel_id,
+            thread_ts=thread_ts,
+            text="⚠️ Please enter a valid 2-letter state code (ex: CA, NY, TX)."
+        )
+        return {"ok": True}
+
 
     if not check_rate_limit(user_id):
         await client.chat_postMessage(

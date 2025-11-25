@@ -75,3 +75,9 @@ def get_cached_result(key:str) -> Optional[str]:
     """Return cached value if exists, else None"""
     return redis_client.get(key)
 
+def set_user_location(user_id: str, location: str):
+    redis.set(f"user:{user_id}:location", location)
+
+def get_user_location(user_id: str):
+    loc = redis_client.get(f"user:{user_id}:location")
+    return loc.decode() if loc else None
