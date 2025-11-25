@@ -79,5 +79,4 @@ def set_user_location(user_id: str, location: str):
     redis_client.set(f"user:{user_id}:location", location)
 
 def get_user_location(user_id: str):
-    loc = redis_client.get(f"user:{user_id}:location")
-    return loc.decode() if loc else None
+    return redis_client.get(f"user:{user_id}:location") 
