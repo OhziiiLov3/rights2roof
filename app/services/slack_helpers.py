@@ -14,7 +14,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 # MCP_SERVER_URL = "http://127.0.0.1:5200/mcp" # local dev 
-MCP_SERVER_URL="http://mcp:5300/mcp"
+MCP_SERVER_URL = os.getenv("MCP_SERVER_URL", "http://mcp-sever.railway.internal:5300/mcp")
+
 SLACK_BOT_TOKEN=os.getenv("SLACK_BOT_TOKEN")
 client = AsyncWebClient(token=SLACK_BOT_TOKEN)
 
