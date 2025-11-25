@@ -76,6 +76,9 @@ async def slack_events(req: Request):
     channel_id = event.get("channel")
     thread_ts = event.get("thread_ts") or event.get("ts")
 
+    if not text or not user_id:
+        return {"ok": True}
+
 
     # Ignore bot messages
     if event.get("bot_id"):
@@ -86,7 +89,7 @@ async def slack_events(req: Request):
     if not user_location:
         cleaned = text.strip().upper()
 
-        # validate things like "CA", "NY", "TX"
+     
         if len(cleaned) in (2, 3):
             set_user_location(user_id, cleaned)
 
