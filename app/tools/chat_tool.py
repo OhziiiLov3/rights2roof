@@ -20,14 +20,13 @@ async def chat_tool_fn(user_id: str, query: str) -> ToolOutput:
     """Follow-up Q&A agent using conversation history asynchronously."""
     from app.pipelines.pipeline_query import pipeline_query
     def sync_call():
-        # history = get_messages(user_id, limit=10)
-        # context = "\n".join(history)
-        # answer = openAI_llm.invoke(f"Conversation so far:\n{context}\nUser: {query}\nAssistant:")
-        # add_message(user_id, f"CHAT_QUERY: {query}")
-        # add_message(user_id, f"CHAT_ANSWER: {answer.content}")
-        # return answer.content
-        response = pipeline_query(query, user_id)
-        return response
+        history = get_messages(user_id, limit=10)
+        context = "\n".join(history)
+        answer = openAI_llm.invoke(f"Conversation so far:\n{context}\nUser: {query}\nAssistant:")
+        add_message(user_id, f"CHAT_QUERY: {query}")
+        add_message(user_id, f"CHAT_ANSWER: {answer.content}")
+        return answer.content
+      
     
     output = await asyncio.to_thread(sync_call)
     

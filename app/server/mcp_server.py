@@ -56,9 +56,9 @@ def vector_lookup(query: str) -> Dict[str, Any]:
 @rights2roof_server.tool(description="Follow-up Q&A using conversation history")
 async def chat_tool(query: str, user_id: str) -> Dict[str, Any]:
     # Run chat_tool_fn in a thread to avoid blocking
-    # result = await asyncio.to_thread(chat_tool_fn, user_id, query)
-    # return {"result": result.output}
-    return {"result": pipeline_query(query, user_id)}
+    result = await asyncio.to_thread(chat_tool_fn, user_id, query)
+    return {"result": result.output}
+ 
 
 
 
