@@ -63,11 +63,11 @@ async def chat_tool(query: str, user_id: str) -> Dict[str, Any]:
 
 # == Agent pipeline as tools ==
 @rights2roof_server.tool(description="Run full Rights2Roof pipeline and return final answer")
-def pipeline_tool(query: str, user_id: str) -> dict:
+def pipeline_tool(query: str, user_id: str, location: Optional[str] = None) -> dict:
     """
     Run full pipeline and return JSON-safe response for Slack and logging.
     """
-    final_answer = pipeline_query(query, user_id)
+    final_answer = pipeline_query(query, user_id, location)
     return {"result": final_answer}
 
 
