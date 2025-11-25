@@ -1,0 +1,27 @@
+app = "r2r-app"
+primary_region = "iad"
+
+[env]
+REDIS_HOST = "my-redis-stack.internal"
+REDIS_PORT = "6379"
+REDIS_URL = "redis://my-redis-stack.internal:6379"
+VECTOR_STORE_URL = "redis://my-redis-stack.internal:6379"
+
+[build]
+dockerfile = "Dockerfile"
+
+[processes]
+web = "python entrypoint.py"
+
+[[services]]
+internal_port = 5300   # main internal port (MCP)
+protocol = "tcp"
+processes = ["web"]
+
+  [[services.ports]]
+  port = 80
+  handlers = ["http"]
+
+  [[services.ports]]
+  port = 443
+  handlers = ["tls", "http"]

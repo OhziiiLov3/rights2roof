@@ -5,14 +5,15 @@ from dotenv import load_dotenv
 load_dotenv()
 from typing import List , Any, Optional
 
-
+REDIS_URL = os.getenv("REDIS_URL") or f"redis://{os.getenv('REDIS_HOST')}:{os.getenv('REDIS_PORT')}"
+redis_client = redis.Redis.from_url(REDIS_URL, decode_responses=True)
 # connect to Redis
-redis_client = redis.Redis(
-    host=os.getenv("REDIS_HOST"),
-    port=int(os.getenv("REDIS_PORT", 6379)),
-    password=os.environ.get("REDIS_PASSWORD"),
-    decode_responses=True
-)
+# redis_client = redis.Redis(
+#     host=os.getenv("REDIS_HOST"),
+#     port=int(os.getenv("REDIS_PORT", 6379)),
+#     password=os.environ.get("REDIS_PASSWORD"),
+#     decode_responses=True
+# )
 
 # Rate limit config
 MAX_REQUESTS_PER_HOUR = 10
