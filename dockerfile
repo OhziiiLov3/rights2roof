@@ -9,7 +9,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     && rm -rf /var/lib/apt/lists/* \
-    && pip install --no-cache-dir uv uvicorn
+    && pip install --no-cache-dir uv uvicorn fastapi slack-sdk redis aiohttp
 
 WORKDIR /app
 
@@ -17,7 +17,7 @@ WORKDIR /app
 COPY pyproject.toml uv.lock ./
 
 # Install dependencies using uv
-RUN uv sync --frozen --no-cache || pip install fastapi slack-sdk redis aiohttp
+RUN uv sync --frozen --no-cache || pip install fastapi slack-sdk redis aiohttp fastmcp
 
 # Copy application code
 COPY app/ app/
