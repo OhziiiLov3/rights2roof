@@ -67,6 +67,8 @@ def pipeline_tool(query: str, user_id: str, location: Optional[str] = None) -> d
     """
     Run full pipeline and return JSON-safe response for Slack and logging.
     """
+    if location:
+        query = f"{query} (State: {location})"
     final_answer = pipeline_query(query, user_id, location)
     return {"result": final_answer}
 
