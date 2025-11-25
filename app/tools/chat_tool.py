@@ -5,7 +5,7 @@ from langchain_openai import ChatOpenAI
 import os
 from dotenv import load_dotenv
 from langchain_core.tools import StructuredTool
-from app.pipelines.pipeline_query import pipeline_query
+
 import asyncio
 from langsmith import traceable
 
@@ -18,7 +18,7 @@ openAI_llm = ChatOpenAI(api_key=OPENAI_API_KEY, model="gpt-4.1", temperature=0)
 @traceable()
 async def chat_tool_fn(user_id: str, query: str) -> ToolOutput:
     """Follow-up Q&A agent using conversation history asynchronously."""
-    
+    from app.pipelines.pipeline_query import pipeline_query
     def sync_call():
         # history = get_messages(user_id, limit=10)
         # context = "\n".join(history)

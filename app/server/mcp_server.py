@@ -58,8 +58,7 @@ async def chat_tool(query: str, user_id: str) -> Dict[str, Any]:
     # Run chat_tool_fn in a thread to avoid blocking
     # result = await asyncio.to_thread(chat_tool_fn, user_id, query)
     # return {"result": result.output}
-    result = await asyncio(pipeline_query,user_id,query)
-    return {"result": result.output}
+    return {"result": pipeline_query(query, user_id)}
 
 
 
