@@ -72,7 +72,7 @@ def pipeline_tool(query: str, user_id: str, location: Optional[str] = None) -> d
     else:
         query_with_location = query
 
-    final_answer = pipeline_query(query, user_id, location)
+    final_answer = pipeline_query(query_with_location, user_id)
     return {"result": final_answer}
 
 
