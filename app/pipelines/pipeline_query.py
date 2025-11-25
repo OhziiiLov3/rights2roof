@@ -1,7 +1,7 @@
 import logging
 import json
 from langsmith import traceable
-from app.services.redis_helpers import get_cached_result, cache_result
+from app.services.redis_helpers import get_cached_result, cache_result, get_user_location
 from app.agents.planner_node import planner_node
 from app.agents.rag_node import rag_node
 from app.agents.executor_node import executor_node
@@ -40,14 +40,15 @@ def pipeline_query(user_query: str, user_id: str) -> str:
         "history": history,
         "user_id": user_id
     })
-
+    location = get_user_location(user_id)
     # Executor node -> receives proper ExecutionPlan object
     executor_result = executor_node({
         "query": user_query,
         "plan": plan_obj,
         "rag_response": rag_result.get("rag_response"),
         "history": history,
-        "user_id": user_id
+        "user_id": user_id,
+        "location": location
     })
 
     executor_response = executor_result.get("executor_response", "No response from executor")
