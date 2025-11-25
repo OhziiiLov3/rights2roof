@@ -70,7 +70,7 @@ def pipeline_tool(query: str, user_id: str) -> dict:
     final_answer = pipeline_query(query, user_id)
     return {"result": final_answer}
 
-@rights2roof_server.route("/ping")
+
 def ping() -> str:
     return "pong"
 
