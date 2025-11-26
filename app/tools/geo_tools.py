@@ -5,39 +5,33 @@ from app.models.schemas import ToolOutput
 from typing import Optional
 
 
-def get_location_from_ip(ip: Optional[str] = None) -> ToolOutput:
+def get_location_from_ip(ip:Optional[str] = None) -> ToolOutput:
     """
     Uses ip-api.com to get location info from IP.
-    Never throws for 0.0.0.0 or invalid IPs.
+    If no IP provided, falls back to server IP.
     """
 
     if not ip:
         ip = os.getenv("IP_ADDRESS")
-
     url = f"http://ip-api.com/json/{ip}"
-    
-    try:
-        response = requests.get(url, timeout=3)
-        data = response.json()
-    except Exception:
-        data = {"status": "fail"}
+    response = requests.get(url)
+    data = response.json()
 
     if data.get("status") != "success":
-        # fallback to empty location (Slack bot will ask for state later)
-        return ToolOutput(
-            tool="geo_location",
-            input={"ip": ip},
-            output={"city": None, "state": None, "country": None},
-            step="Get User Location (fallback)"
-        )
-    
+        raise ValueError(f"Could not get location for IP {ip}")
     return ToolOutput(
         tool="geo_location",
         input={"ip": ip},
-        output={
-            "city": data.get("city"),
-            "state": data.get("region"),
-            "country": data.get("country"),
-        },
+        output={"city": data.get("city"), "state": data.get("region"), "country": data.get("country")},
         step="Get User Location"
     )
+
+# --- Wrap the Tools (StructuredTool) --
+# It lets your agent or executor actually call the tool with inputs.
+# Without this, LangChain doesn’t know how to execute get_location_from_ip
+
+geo_tool = StructuredTool.from_function(
+    func=get_location_from_ip,
+    name="geo_location",
+    description="Get User's Location",
+)
