@@ -39,9 +39,9 @@ async def slack_roof(text: str = Form(...),user_id: str = Form(...),channel_id: 
         location = get_user_location(user_id)
         if not location:
             return {
-        "response_type": "ephemeral",
-        "text": "🏠 To give you accurate tenant-rights info, what *state* are you in? (e.g., CA, NY, TX)"
-        }
+                "response_type": "ephemeral",
+                "text": "🏠 To give you accurate tenant-rights info, what *state* are you in? (e.g., CA, NY, TX)"
+                }
 
         # step 2: Slack to respond immediately 
         ephemeral_response = {

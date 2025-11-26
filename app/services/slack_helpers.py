@@ -63,8 +63,18 @@ async def post_slack_thread(client: AsyncWebClient,channel_id: str, user_id: str
     """
     try:
         logging.info(f"[Right2Roof Bot] simulating pipeline for {user_id}:{query_text}")
+        location = get_user_location(user_id)
+
+        if not location:
+            await client.chat_postMessage(
+                channel=channel_id,
+                user=user_id,
+                text="🏠 Before I run your tenant-rights search, what *state* are you in? (Example: CA, NY, TX)"
+            )
+            return
+        
         mcp_client = None
-        for attempt in range(5):  # try 10 times
+        for attempt in range(5):  
             try:
                 mcp_client = await Client(MCP_SERVER_URL).__aenter__()
                 await mcp_client.ping()
@@ -77,7 +87,6 @@ async def post_slack_thread(client: AsyncWebClient,channel_id: str, user_id: str
             raise RuntimeError("Unable to connect to MCP server after multiple attempts")
         
         
-        location = get_user_location(user_id)
         # call the pipeline tool
         result = await mcp_client.call_tool(
             "pipeline_tool",
