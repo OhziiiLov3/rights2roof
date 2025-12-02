@@ -5,31 +5,55 @@ from app.models.schemas import ToolOutput
 from typing import Optional
 
 
-def get_location_from_ip(ip:Optional[str] = None) -> ToolOutput:
+def get_location_from_ip(ip: Optional[str] = None) -> ToolOutput:
     """
-    Uses ip-api.com to get location info from IP.
-    If no IP provided, falls back to server IP.
+    Graceful geo lookup:
+    - Slack never sends real IPs — prevents failures on 0.0.0.0 / internal IPs.
+    - If IP lookup fails, returns a soft failure instead of raising.
     """
 
-    if not ip:
-        ip = os.getenv("IP_ADDRESS")
-    url = f"http://ip-api.com/json/{ip}"
-    response = requests.get(url)
-    data = response.json()
+    # If no IP or a known internal IP → return soft failure
+    if not ip or ip in ["0.0.0.0", "127.0.0.1"] or ip.startswith("100."):
+        return ToolOutput(
+            tool="geo_location",
+            input={"ip": ip},
+            output={"error": "NO_IP_AVAILABLE"},
+            step="Get User Location"
+        )
 
-    if data.get("status") != "success":
-        raise ValueError(f"Could not get location for IP {ip}")
-    return ToolOutput(
-        tool="geo_location",
-        input={"ip": ip},
-        output={"city": data.get("city"), "state": data.get("region"), "country": data.get("country")},
-        step="Get User Location"
-    )
+    try:
+        url = f"http://ip-api.com/json/{ip}"
+        response = requests.get(url, timeout=3)
+        data = response.json()
+
+        if data.get("status") != "success":
+            return ToolOutput(
+                tool="geo_location",
+                input={"ip": ip},
+                output={"error": "LOOKUP_FAILED"},
+                step="Get User Location"
+            )
+
+        return ToolOutput(
+            tool="geo_location",
+            input={"ip": ip},
+            output={
+                "city": data.get("city"),
+                "state": data.get("region"),
+                "country": data.get("country"),
+            },
+            step="Get User Location"
+        )
+
+    except Exception:
+        return ToolOutput(
+            tool="geo_location",
+            input={"ip": ip},
+            output={"error": "LOOKUP_EXCEPTION"},
+            step="Get User Location"
+        )
 
 # --- Wrap the Tools (StructuredTool) --
-# It lets your agent or executor actually call the tool with inputs.
-# Without this, LangChain doesn’t know how to execute get_location_from_ip
-
 geo_tool = StructuredTool.from_function(
     func=get_location_from_ip,
     name="geo_location",

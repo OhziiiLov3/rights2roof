@@ -169,6 +169,6 @@ async def post_slack_thread(client: AsyncWebClient,channel_id: str, user_id: str
             user=user_id,
             text=f"<@{user_id}> Error fetching housing info: {str(e)}"
         )
-    # logs errors
+  
         add_message(user_id, f"BOT_ERROR: {str(e)}")
 

@@ -11,7 +11,7 @@ from langchain_core.tools import StructuredTool
 import asyncio
 from langsmith import traceable
 
-# Load .env variables
+
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
@@ -37,7 +37,7 @@ async def chat_tool_fn(user_id: str, query: str) -> ToolOutput:
         prev_plan = last_turn.get("plan", {})
         prev_rag = last_turn.get("rag_response", "")
 
-        # === Optional: add vector store lookup for deeper follow-up ===
+        # add vector store lookup for deeper follow-up ===
         vector_results = get_context(query)
         vector_text = "\n".join([d.page_content for d in vector_results.output]) if vector_results.output else ""
 
@@ -65,7 +65,7 @@ async def chat_tool_fn(user_id: str, query: str) -> ToolOutput:
 
         answer = followup_llm.invoke(prompt).content
 
-        # track follow-ups in redis history if needed
+        # track follow-ups in redis history 
         add_message(user_id, f"FOLLOWUP_QUERY: {query}")
         add_message(user_id, f"FOLLOWUP_ANSWER: {answer}")
 
