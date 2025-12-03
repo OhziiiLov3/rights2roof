@@ -1,6 +1,6 @@
-# 🏠 Rights2Roof — AI Housing Rights Slack Bot  
+#  <img src="https://i.imgur.com/MhEU6fv.png" alt="Logo" width="40" style="vertical-align: middle;"> Rights2Roof — AI Housing Rights Slack Bot  
 
-***
+
 
 ## Table of Contents  
 - [Overview](#overview)  
@@ -461,3 +461,38 @@ NGROK_URL=https://<your-ngrok-id>.ngrok-free.app
 
 --- 
 ## Contributors 
+Thank you to everyone who has contributed to **Rights2Roof**.  
+Your work helps make housing rights more accessible for everyone.
+
+### Core Contributors
+| Name | Role | GitHub |
+|------|------|--------|
+| Keith Baskerville |  Communication Systems Lead | [@ohziiilov3](https://github.com/ohziiilov3) |
+| Peter Iyayi | Deployment & Reliability Lead  |  [@PeterIyayi](https://github.com/PeterIyayi) |
+| Celilia Kanne | Tooling & Intergration Lead| [@ceciliacloud](https://github.com/ceciliacloud) |
+| Don Namgyal | Data & Evaluation Lead | [@dnamgyal](https://github.com/dnamgyal) |
+| Chijioge Nwogu | Architecture & Planning Lead | [@chinwogu45-source](https://github.com/chinwogu45-source) |
+
+### Want to Contribute?
+We welcome contributions of all kinds, including:
+- 🐛 Bug fixes  
+- 📚 Documentation improvements  
+- 🧩 New tools or agents  
+- ⚙️ Improvements to the MCP pipeline  
+- 🧪 Tests and workflow enhancements  
+- 🚀 Feature proposals  
+
+### How to Get Started
+1. **Fork** the repo  
+2. **Create a new branch** (`feature/my-update`)  
+3. **Commit** your changes  
+4. **Open a Pull Request** into `dev`  
+5. The team will review and merge following the contribution guidelines
+
+### Contributor Guidelines
+- PRs must target the `dev` branch  
+- Please follow the project coding style (Python + FastAPI + LangGraph conventions)  
+- Add clear descriptions and context in your PR  
+- Keep commits small and focused  
+
+---
