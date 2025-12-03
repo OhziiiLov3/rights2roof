@@ -5,6 +5,7 @@
 ## Table of Contents  
 - [Overview](#overview)  
 - [Architecture](#architecture) 
+- [Demo](#demo)
 - [Core Components](#core-components) 
 - [Production Setup (Slack Config)](#production-setup-slack-config)  
   - [Step 1 - Configure Slash Commands](#step-1---configure-slash-commands)
@@ -37,6 +38,10 @@ It uses:
 - Railway for production hosting  
 
 ---
+# Demo
+Demo goes here
+---
+
 # Architecture
 
 **Workflow:**  
@@ -496,3 +501,50 @@ We welcome contributions of all kinds, including:
 - Keep commits small and focused  
 
 ---
+## Tech Stack
+
+**Backend**
+- FastAPI  
+- Python 3.11  
+- Redis (Caching, RediSearch for Vector Store)  
+- Railway Redis (for cache, history, and multi-turn context)  
+
+**AI / Orchestration**
+- LangChain Core  
+- LangGraph (agent orchestration)  
+- FastMCP (custom MCP server framework)  
+- OpenAI GPT Models  
+
+**Agents / Tools**
+- StructuredTool (LangChain)  
+- Custom MCP Tools (geo lookup, legislative search, news, Wikipedia, Redis cache, vector search)  
+
+**Integrations**
+- Slack API (slash commands + events)  
+- Slack Webhooks (message delivery)  
+
+**DevOps**
+- Docker  
+- Railway (services: Redis, vector DB, MCP server, FastAPI)  
+- GitHub Actions / CI  
+
+**Other**
+- AsyncIO  
+- Pydantic  
+- Requests  
+
+## Project Structure 
+```md
+app/
+├── agents/                 # Planner, RAG, and Executor agents + LangGraph nodes
+├── models/                 # Pydantic models (schemas + pipeline state)
+├── pipelines/              # LangGraph pipeline graph + query router
+├── resources/              # Housing rights PDFs used for ingestion / testing
+├── server/                 # FastMCP server entrypoint
+├── services/               # Slack webhook, Slack helpers, Redis helpers
+├── test/                   # Unit + integration tests
+├── tools/                  # StructuredTools (geo, RAG, news, vector DB, etc.)
+├── slack_webhook.py        # FastAPI Slack router (slash commands + events)
+└── mcp_server.py           # MCP server controller
+
+```
