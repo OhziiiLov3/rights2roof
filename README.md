@@ -31,7 +31,7 @@ It uses:
 - FastAPI  
 - Slack Events API  
 - Model Context Protocol (MCP) FastMCP
-- RedisStack (JSON, Search, Vectors)  
+- RedisStack (caching, message history, rate limits, vectors)  
 - Vector search + legal document scanning  
 - Multi-turn contextual memory  
 - Docker for local orchestration  
